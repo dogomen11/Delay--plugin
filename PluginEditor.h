@@ -15,7 +15,7 @@
 /**
 */
 class NewProjectAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                                                   public juce::Slider::Listener
+                                        public juce::Slider::Listener
 {
 public:
     NewProjectAudioProcessorEditor (NewProjectAudioProcessor&);
@@ -26,6 +26,9 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+
+    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> filter_cutoff_value;
+    ScopedPointer<AudioProcessorValueTreeState::SliderAttachment> filter_resonance_value;
 
 private:
     

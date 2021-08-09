@@ -9,25 +9,35 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+using namespace juce;
+using namespace juce::dsp;
+
 //==============================================================================
 
 //contructor
 NewProjectAudioProcessor::NewProjectAudioProcessor()
-#ifndef JucePlugin_PreferredChannelConfigurations
-    : AudioProcessor(BusesProperties()
-#if ! JucePlugin_IsMidiEffect
-#if ! JucePlugin_IsSynth
-        .withInput("Input", juce::AudioChannelSet::stereo(), true)
-#endif
-        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
-#endif
-    ),
-    tree_state(*this, nullptr)
-#endif
+        #ifndef JucePlugin_PreferredChannelConfigurations
+            : AudioProcessor(BusesProperties()
+        #if ! JucePlugin_IsMidiEffect
+        #if ! JucePlugin_IsSynth
+                .withInput("Input", juce::AudioChannelSet::stereo(), true)
+        #endif
+                .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+        #endif
+            ),
+            parameters(*this, nullptr)
+            //low_pass_filter(dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1f) )
+        #endif
 {
-    juce::NormalisableRange<float> gain_range(-12.0f, 12.0f, 0.01f);
-    tree_state.createAndAddParameter(GAIN_ID, GAIN_NAME, GAIN_NAME,  gain_range, 0.5f, nullptr, nullptr);
-    tree_state.state = juce::ValueTree(GAIN_ID);
+    NormalisableRange<float> gain_range(-12.0f, 12.0f, 0.01f);
+    NormalisableRange<float> cutoffRange(20.0f, 20000.0f, 0.01f);
+    NormalisableRange<float> resRange(1.0f, 5.0f, 0.001f);
+
+    parameters.createAndAddParameter(GAIN_ID, GAIN_NAME, GAIN_NAME,  gain_range, 0.5f, nullptr, nullptr);
+    parameters.createAndAddParameter("cutoff", "Cutoff", "cutoff", cutoffRange, 600.0f, nullptr, nullptr);
+    parameters.createAndAddParameter("resonance", "Resonance", "resonance", resRange, 1.0f, nullptr, nullptr);
+
+    parameters.state = juce::ValueTree("saved_parameters");
 }
 
 //destructor
@@ -35,7 +45,7 @@ NewProjectAudioProcessor::~NewProjectAudioProcessor()
 {
 }
 
-//==============================================================================
+//================================================================================================================================
 const juce::String NewProjectAudioProcessor::getName() const
 {
     return JucePlugin_Name;
@@ -97,11 +107,25 @@ void NewProjectAudioProcessor::changeProgramName (int index, const juce::String&
 {
 }
 
-//==============================================================================
+//================================================================================================================================
 void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    
+    last_sample_rate = sampleRate;
+
+    previous_gain = pow(10, *parameters.getRawParameterValue(GAIN_ID) / 20);
+
+    dsp::ProcessSpec spec;
+    spec.sampleRate = last_sample_rate;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getMainBusNumOutputChannels();
+
+    //low_pass_filter.prepare(spec);
+    //low_pass_filter.reset();
+    state_variable_filter.reset();
+    updateParameters();
+    state_variable_filter.prepare(spec);
+    
 }
 
 void NewProjectAudioProcessor::releaseResources()
@@ -136,27 +160,55 @@ bool NewProjectAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 }
 #endif
 
+//================================================================================================================================
+void NewProjectAudioProcessor::updateParameters()
+{
+    float low_pass_f_frequency = *parameters.getRawParameterValue("cutoff");
+    float low_pass_f_resonance = *parameters.getRawParameterValue("resonance");
+
+    //*low_pass_filter.state = *dsp::IIR::Coefficients<float>::makeLowPass(last_sample_rate, low_pass_f_frequency, low_pass_f_resonance);
+    state_variable_filter.state->type = dsp::StateVariableFilter::Parameters<float>::Type::lowPass;
+    state_variable_filter.state->setCutOffFrequency(last_sample_rate, low_pass_f_frequency, low_pass_f_resonance);
+}
+
+void NewProjectAudioProcessor::process(dsp::ProcessContextReplacing<float> context)
+{
+
+}
+
+//================================================================================================================================
 void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
+    float current_gain = pow(10, *parameters.getRawParameterValue(GAIN_ID) / 20);
+
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
+    if (current_gain == previous_gain)
+    {
+        buffer.applyGain(current_gain);
+    }
+    else
+    {
+        buffer.applyGainRamp(0, buffer.getNumSamples(), previous_gain, current_gain);
+    }
+    
+    dsp::AudioBlock<float> block(buffer);
+
+    updateParameters();
+    state_variable_filter.process(dsp::ProcessContextReplacing<float>(block) );
+
+    //process(dsp::ProcessContextReplacing<float>(block));
+
+
+    //low_pass_filter.process(dsp::ProcessContextReplacing<float>(block));
+
+    
+    /*
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer (channel);
@@ -167,6 +219,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         }
     }
+    */
 }
 
 //==============================================================================
@@ -186,12 +239,25 @@ void NewProjectAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+
+    std::unique_ptr<XmlElement> xml_save(parameters.state.createXml());
+    copyXmlToBinary(*xml_save, destData);
+
 }
 
 void NewProjectAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+
+    std::unique_ptr<XmlElement> the_parameters( getXmlFromBinary(data, sizeInBytes) );
+    if (the_parameters != nullptr)
+    {
+        if (the_parameters->hasTagName(parameters.state.getType() ) )
+        {
+            parameters.state = ValueTree::fromXml(*the_parameters);
+        }
+    }
 }
 
 //==============================================================================

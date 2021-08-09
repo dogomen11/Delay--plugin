@@ -21,7 +21,7 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
 
-    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.tree_state, GAIN_ID, mMakeUpGain);
+    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, GAIN_ID, mMakeUpGain);
 
     setSize (1000, 600);
 
@@ -33,7 +33,6 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     addAndMakeVisible(mMakeUpGainLabel);
     mMakeUpGain.addListener(this);
     mMakeUpGainLabel.setText("gain", juce::dontSendNotification);
-    //mMakeUpGainLabel.attachToComponent(&mMakeUpGain, false);
 
     
     addAndMakeVisible(mThreshhold);
@@ -43,7 +42,6 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     mThreshhold.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     addAndMakeVisible(mThreshholdLabel);
     mThreshholdLabel.setText("threshhold", juce::dontSendNotification);
-    //mThreshholdLabel.attachToComponent(&mThreshhold, false);
 
     
 
@@ -54,7 +52,6 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     mAttack.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     addAndMakeVisible(mAttackLabel);
     mAttackLabel.setText("attack", juce::dontSendNotification);
-    //mAttackLabel.attachToComponent(&mAttack, false);
 
 
     addAndMakeVisible(mRealese);
@@ -64,7 +61,6 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     mRealese.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     addAndMakeVisible(mRealeseLabel);
     mRealeseLabel.setText("realese", juce::dontSendNotification);
-    //mRealeseLabel.attachToComponent(&mRealese, false);
 
     addAndMakeVisible(mRatio);
     mRatio.setRange(-12.0f, 12.0f, 0.01f);
@@ -72,8 +68,12 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
     mRatio.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     addAndMakeVisible(mRatioLabel);
     mRatioLabel.setText("ratio", juce::dontSendNotification);
-    //mRatioLabel.attachToComponent(&mRatio, false);
 
+
+    filter_cutoff_value = new AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, "cutoff", mThreshhold);
+    mThreshhold.setSkewFactorFromMidPoint(1000.0f);
+
+    filter_resonance_value = new AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, "resonance", mAttack);
     
 
 }
@@ -90,10 +90,14 @@ void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::white);
     g.setFont (15.0f);
+    g.setColour(Colours::maroon);
+    Rectangle<float> area(5, 5, 990, 590);
+    g.drawRoundedRectangle(area, 20.0f, 3.0f);
 }
 
 void NewProjectAudioProcessorEditor::resized()
 {
+    Rectangle<int> area = getLocalBounds().reduced(8);
     unsigned mDistansBetweenDials = 190;
 
     mMakeUpGain.setBounds(45,  420, 150, 180);

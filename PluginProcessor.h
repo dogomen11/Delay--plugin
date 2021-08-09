@@ -13,6 +13,8 @@
 #define GAIN_ID "gain"
 #define GAIN_NAME "Gain"
 
+using namespace juce;
+using namespace juce::dsp;
 
 
 class NewProjectAudioProcessor  : public juce::AudioProcessor
@@ -60,10 +62,23 @@ public:
     //==============================================================================
 
     float mGain = 0.0;
+    float previous_gain;
 
-    juce::AudioProcessorValueTreeState tree_state;
+    void process(dsp::ProcessContextReplacing<float> context);
+
+    void updateParameters();
+
+    juce::AudioProcessorValueTreeState parameters;
 
 private:
+
+    float last_sample_rate;
+
+    
+    dsp::ProcessorDuplicator<dsp::StateVariableFilter::Filter<float>, dsp::StateVariableFilter::Parameters<float> > state_variable_filter;
+
+    //dsp::ProcessorDuplicator< dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float> > low_pass_filter;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessor)
 };
