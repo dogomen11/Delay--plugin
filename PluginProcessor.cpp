@@ -26,16 +26,11 @@ NewProjectAudioProcessor::NewProjectAudioProcessor()
         #endif
             ),
             parameters(*this, nullptr)
-            //low_pass_filter(dsp::IIR::Coefficients<float>::makeLowPass(44100, 20000.0f, 0.1f) )
         #endif
 {
     NormalisableRange<float> gain_range(-12.0f, 12.0f, 0.01f);
-    NormalisableRange<float> cutoffRange(20.0f, 20000.0f, 0.01f);
-    NormalisableRange<float> resRange(1.0f, 5.0f, 0.001f);
 
     parameters.createAndAddParameter(GAIN_ID, GAIN_NAME, GAIN_NAME,  gain_range, 0.5f, nullptr, nullptr);
-    parameters.createAndAddParameter("cutoff", "Cutoff", "cutoff", cutoffRange, 600.0f, nullptr, nullptr);
-    parameters.createAndAddParameter("resonance", "Resonance", "resonance", resRange, 1.0f, nullptr, nullptr);
 
     parameters.state = juce::ValueTree("saved_parameters");
 }
@@ -110,22 +105,22 @@ void NewProjectAudioProcessor::changeProgramName (int index, const juce::String&
 //================================================================================================================================
 void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    
+    const int num_input_channels = getNumInputChannels();
+    const int delay_buffer_size = 2 * (sampleRate + samplesPerBlock);
+    m_delay_buffer.setSize(num_input_channels, delay_buffer_size);
+
+
     last_sample_rate = sampleRate;
+    m_sample_rate = sampleRate;
 
     previous_gain = pow(10, *parameters.getRawParameterValue(GAIN_ID) / 20);
 
-    dsp::ProcessSpec spec;
-    spec.sampleRate = last_sample_rate;
-    spec.maximumBlockSize = samplesPerBlock;
-    spec.numChannels = getMainBusNumOutputChannels();
+    //dsp::ProcessSpec spec;
+    //spec.sampleRate = last_sample_rate;
+    //spec.maximumBlockSize = samplesPerBlock;
+    //spec.numChannels = getTotalNumOutputChannels();
 
-    //low_pass_filter.prepare(spec);
-    //low_pass_filter.reset();
-    state_variable_filter.reset();
-    updateParameters();
-    state_variable_filter.prepare(spec);
-    
+    //updateParameters();
 }
 
 void NewProjectAudioProcessor::releaseResources()
@@ -141,10 +136,6 @@ bool NewProjectAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
     juce::ignoreUnused (layouts);
     return true;
   #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
      && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
@@ -163,12 +154,7 @@ bool NewProjectAudioProcessor::isBusesLayoutSupported (const BusesLayout& layout
 //================================================================================================================================
 void NewProjectAudioProcessor::updateParameters()
 {
-    float low_pass_f_frequency = *parameters.getRawParameterValue("cutoff");
-    float low_pass_f_resonance = *parameters.getRawParameterValue("resonance");
 
-    //*low_pass_filter.state = *dsp::IIR::Coefficients<float>::makeLowPass(last_sample_rate, low_pass_f_frequency, low_pass_f_resonance);
-    state_variable_filter.state->type = dsp::StateVariableFilter::Parameters<float>::Type::lowPass;
-    state_variable_filter.state->setCutOffFrequency(last_sample_rate, low_pass_f_frequency, low_pass_f_resonance);
 }
 
 void NewProjectAudioProcessor::process(dsp::ProcessContextReplacing<float> context)
@@ -182,12 +168,13 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-
-    float current_gain = pow(10, *parameters.getRawParameterValue(GAIN_ID) / 20);
+    dsp::AudioBlock<float> block(buffer);
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+    
 
+    float current_gain = pow(10, *parameters.getRawParameterValue(GAIN_ID) / 20);
     if (current_gain == previous_gain)
     {
         buffer.applyGain(current_gain);
@@ -197,29 +184,80 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         buffer.applyGainRamp(0, buffer.getNumSamples(), previous_gain, current_gain);
     }
     
-    dsp::AudioBlock<float> block(buffer);
+    const int buffer_length = buffer.getNumSamples();
+    const int delay_buffer_length = m_delay_buffer.getNumSamples();
 
-    updateParameters();
-    state_variable_filter.process(dsp::ProcessContextReplacing<float>(block) );
-
-    //process(dsp::ProcessContextReplacing<float>(block));
-
-
-    //low_pass_filter.process(dsp::ProcessContextReplacing<float>(block));
-
-    
-    /*
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        auto* channelData = buffer.getWritePointer (channel);
+        const float* buffer_data = buffer.getReadPointer(channel);
+        const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
+        float* dry_buffer = buffer.getWritePointer(channel);
 
+        fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data);
+        getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data);
+        feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer);
+
+        /*
+        auto* channelData = buffer.getWritePointer (channel);
+        
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            channelData[sample] = channelData[sample] * juce::Decibels::decibelsToGain(mGain);
+            channelData[sample] = channelData[sample] * juce::Decibels::decibelsToGain(m_gaim);
 
-        }
+        }*/
     }
-    */
+
+    m_write_position += buffer_length;
+    m_write_position %= delay_buffer_length;
+
+}
+
+//copy from buffer to delay_buffer
+void NewProjectAudioProcessor::fillDelayBuffer(int channel, const int buffer_length,const int delay_buffer_length,
+                                               const float* buffer_data, const float* delay_buffer_data)
+{
+    if (delay_buffer_length > buffer_length + m_write_position)
+    {
+        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_length, 0.4f, 0.4f);
+    }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - m_write_position;
+        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_remaining, 0.4f, 0.4f);
+        m_delay_buffer.copyFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), 0.4f, 0.4f);
+    }
+}
+
+void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
+    const float* buffer_data, const float* delay_buffer_data)
+{
+    int delay_time = 250;
+    const int read_position = static_cast<int> (delay_buffer_length + m_write_position - (m_sample_rate * delay_time / 1000)) % delay_buffer_length;
+    if (delay_buffer_length > buffer_length + read_position)
+    {
+        buffer.addFrom(channel, 0, delay_buffer_data + read_position, buffer_length);
+    }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - read_position;
+        buffer.copyFrom(channel, 0, delay_buffer_data + read_position, buffer_remaining);
+        buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
+    }
+}
+
+void NewProjectAudioProcessor::feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
+                                             float* dry_buffer)
+{
+    if (delay_buffer_length > buffer_length + m_write_position)
+    {
+        m_delay_buffer.addFromWithRamp(channel, m_write_position, dry_buffer, buffer_length, 0.4f, 0.4f);
+    }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - m_write_position;
+        m_delay_buffer.addFromWithRamp(channel, buffer_remaining, dry_buffer, buffer_remaining, 0.4f, 0.4f);
+        m_delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, 0.4f, 0.4f);
+    }
 }
 
 //==============================================================================
@@ -233,7 +271,7 @@ juce::AudioProcessorEditor* NewProjectAudioProcessor::createEditor()
     return new NewProjectAudioProcessorEditor (*this);
 }
 
-//==============================================================================
+
 void NewProjectAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
@@ -260,8 +298,6 @@ void NewProjectAudioProcessor::setStateInformation (const void* data, int sizeIn
     }
 }
 
-//==============================================================================
-// This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new NewProjectAudioProcessor();

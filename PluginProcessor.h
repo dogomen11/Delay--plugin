@@ -61,23 +61,28 @@ public:
 
     //==============================================================================
 
-    float mGain = 0.0;
+    float m_gaim = 0.0;
     float previous_gain;
 
     void process(dsp::ProcessContextReplacing<float> context);
-
     void updateParameters();
-
     juce::AudioProcessorValueTreeState parameters;
+
+    void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length, const float* buffer_data, const float* delay_buffer_data);
+
+    void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
+        const float* buffer_data, const float* delay_buffer_data);
+
+    void feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
+                       float* dry_buffer);
 
 private:
 
     float last_sample_rate;
 
-    
-    dsp::ProcessorDuplicator<dsp::StateVariableFilter::Filter<float>, dsp::StateVariableFilter::Parameters<float> > state_variable_filter;
-
-    //dsp::ProcessorDuplicator< dsp::IIR::Filter<float>, dsp::IIR::Coefficients<float> > low_pass_filter;
+    AudioBuffer<float> m_delay_buffer;
+    int m_write_position{ 0 };
+    int m_sample_rate{ 44100 };
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessor)
