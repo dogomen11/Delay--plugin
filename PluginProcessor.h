@@ -61,20 +61,37 @@ public:
 
     //==============================================================================
 
-    float m_gaim = 0.0;
+    float m_input_gain = 0.0;
+    int m_delay_time = 400;
+    float m_delay_mix = 0.4;
+
     float previous_gain;
 
     void process(dsp::ProcessContextReplacing<float> context);
     void updateParameters();
     juce::AudioProcessorValueTreeState parameters;
 
-    void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length, const float* buffer_data, const float* delay_buffer_data);
+    void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
+                         const float* buffer_data, const float* delay_buffer_data, float m_delay_mix);
 
     void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
-        const float* buffer_data, const float* delay_buffer_data);
+        const float* buffer_data, const float* delay_buffer_data, int m_delay_time);
 
     void feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
-                       float* dry_buffer);
+                       float* dry_buffer, float m_delay_mix);
+
+    class Visualiser : public AudioVisualiserComponent
+    {
+    public:
+        Visualiser() : AudioVisualiserComponent(2)
+        {
+            setBufferSize(512);
+            setSamplesPerBlock(64);
+            setColours(Colours::black, Colours::indianred);
+            
+        }
+    };
+    Visualiser m_visualiser;
 
 private:
 
@@ -82,7 +99,7 @@ private:
 
     AudioBuffer<float> m_delay_buffer;
     int m_write_position{ 0 };
-    int m_sample_rate{ 44100 };
+    int m_sample_rate{ 48000 };
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessor)

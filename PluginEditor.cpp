@@ -11,9 +11,17 @@
 
 void NewProjectAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
-    if (slider == &m_outgain)
+    if (slider == &m_input_gain)
     {
-        audioProcessor.m_gaim = m_outgain.getValue();
+        audioProcessor.m_input_gain = m_input_gain.getValue();
+    }
+    else if(slider == &m_delay_time)
+    {
+        audioProcessor.m_delay_time = m_delay_time.getValue();
+    }
+    else if (slider == &m_delay_mix)
+    {
+        audioProcessor.m_delay_mix = m_delay_mix.getValue();
     }
 }
 
@@ -24,11 +32,11 @@ void NewProjectAudioProcessorEditor::buttonClicked(Button*)
 
 //==============================================================================
 NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+                                    : AudioProcessorEditor (&p), audioProcessor (p)
 {
     setSize(1200, 800);
 
-    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, GAIN_ID, m_outgain);
+    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, GAIN_ID, m_input_gain);
     initiateComponents(p);
 
 }
@@ -47,19 +55,22 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
     m_pan_dials_label.setText("pan", juce::dontSendNotification);
     addAndMakeVisible(m_on_off_buttons_label);
     m_on_off_buttons_label.setText("on/off", juce::dontSendNotification);
+    addAndMakeVisible(this->audioProcessor.m_visualiser);
     //*****************************************************************************
-    addAndMakeVisible(m_outgain);
-    m_outgain.setRange(-12.0f, 12.0f, 0.01f);
-    m_outgain.setValue(0.0f);
-    m_outgain.setTextValueSuffix("db");
-    m_outgain.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    m_outgain.addListener(this);
-    addAndMakeVisible(m_outgain_label);
-    m_outgain_label.setText("gain", juce::dontSendNotification);
+    addAndMakeVisible(m_input_gain);
+    m_input_gain.setRange(-60.0f, 6.0f, 0.01f);
+    m_input_gain.setSkewFactorFromMidPoint(0);
+    m_input_gain.setValue(0.0f);
+    m_input_gain.setTextValueSuffix("db");
+    m_input_gain.setTextBoxStyle(Slider::TextBoxBelow, true, 80, 20);
+    m_input_gain.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    m_input_gain.addListener(this);
+    addAndMakeVisible(m_input_gain_label);
+    m_input_gain_label.setText("input", juce::dontSendNotification);
 
     addAndMakeVisible(m_delay_time);
-    m_delay_time.setRange(0.0f, 1000.0f, 1.0f);
-    m_delay_time.setValue(0.0f);
+    m_delay_time.setRange(0.0f, 1500.0f, 1.0f);
+    m_delay_time.setValue(500.0f);
     m_delay_time.setTextValueSuffix("ms");
     m_delay_time.setTextBoxStyle(Slider::TextBoxBelow, true, 50, 20);
     m_delay_time.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -68,8 +79,8 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
     m_delay_time_label.setText("time", juce::dontSendNotification);
 
     addAndMakeVisible(m_delay_mix);
-    m_delay_mix.setRange(0.0f, 100.0f, 0.01f);
-    m_delay_mix.setValue(50.0f);
+    m_delay_mix.setRange(0.0f, 0.8f, 0.01f);
+    m_delay_mix.setValue(0.4f);
     m_delay_mix.setTextValueSuffix("%");
     m_delay_mix.setTextBoxStyle(Slider::TextBoxBelow, true, 50, 20);
     m_delay_mix.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
@@ -359,15 +370,17 @@ void NewProjectAudioProcessorEditor::printComponents()
     int dials_distance_from_edeg = 68;
     int size_of_dial = 62;
 
-    m_outgain.setBounds(1050, 0, 150, 150);
-    m_outgain_label.setBounds(1145, 80, 80, 50);
+    m_input_gain.setBounds(13, 5, 80, 80);
+    m_input_gain_label.setBounds(30, 70, 80, 50);
     m_pan_dials_label.setBounds(15, 510, 80, 50);
     m_volume_dials_label.setBounds(15, 580, 80, 50);
     m_on_off_buttons_label.setBounds(15, 650, 80, 50);
-    m_delay_time.setBounds(200, 700, 90, 90);
-    m_delay_time_label.setBounds(180, 735, 90, 30);
-    m_delay_mix.setBounds(400, 700, 90, 90);
-    m_delay_mix_label.setBounds(270, 735, 90, 30);
+    m_delay_time.setBounds(200, 710, 90, 90);
+    m_delay_time_label.setBounds(100, 735, 90, 30);
+    m_delay_mix.setBounds(400, 710, 90, 90);
+    m_delay_mix_label.setBounds(300, 735, 90, 30);
+    
+    this->audioProcessor.m_visualiser.setBounds(110, 60, 930, 400);
 
     m_volume_dial_1.setBounds(dials_distance_from_edeg + dials_horizontal_distance * 0, 580, size_of_dial, size_of_dial);
     m_volume_dial_2.setBounds(dials_distance_from_edeg + dials_horizontal_distance * 1, 580, size_of_dial, size_of_dial);

@@ -28,6 +28,7 @@ public:
     void initiateComponents(NewProjectAudioProcessor&);
     void printComponents();
     
+    ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> slider_attach;
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
@@ -35,9 +36,8 @@ public:
 
 private:
 
-    juce::Slider m_outgain;
-    juce::Label m_outgain_label;
-    
+    juce::Slider m_input_gain;
+    juce::Label m_input_gain_label;
     //******************************
     juce::Slider m_volume_dial_1;
     juce::Slider m_volume_dial_2;
@@ -98,13 +98,13 @@ private:
     juce::Label m_delay_time_label;
     juce::Slider m_delay_mix;
     juce::Label m_delay_mix_label;
+    //************************************
 
+    //************************************
 
 
     NewProjectAudioProcessor& audioProcessor;
 
-    //like smart_ptr
-    juce::ScopedPointer <juce::AudioProcessorValueTreeState::SliderAttachment> slider_attach;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessorEditor)
 };
