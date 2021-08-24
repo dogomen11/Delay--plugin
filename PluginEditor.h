@@ -10,6 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
+#include "MyDelay.h"
 
 using namespace juce;
 
@@ -102,9 +103,7 @@ private:
 
     //************************************
 
-
     NewProjectAudioProcessor& audioProcessor;
-
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessorEditor)
 };

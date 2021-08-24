@@ -9,9 +9,13 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "MyDelay.h"
 
-#define GAIN_ID "gain"
-#define GAIN_NAME "Gain"
+#define INPUT_GAIN_ID "input gain"
+#define INPUT_GAIN_NAME "Input Gain"
+#define DELAY_MIX_ID "delay mix"
+#define DELAY_MIX_NAME "Delay Mix"
+
 
 using namespace juce;
 using namespace juce::dsp;
@@ -70,15 +74,6 @@ public:
     void process(dsp::ProcessContextReplacing<float> context);
     void updateParameters();
     juce::AudioProcessorValueTreeState parameters;
-
-    void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
-                         const float* buffer_data, const float* delay_buffer_data, float m_delay_mix);
-
-    void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
-        const float* buffer_data, const float* delay_buffer_data, int m_delay_time);
-
-    void feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
-                       float* dry_buffer, float m_delay_mix);
 
     class Visualiser : public AudioVisualiserComponent
     {

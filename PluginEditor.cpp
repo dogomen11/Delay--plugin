@@ -36,7 +36,8 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
 {
     setSize(1200, 800);
 
-    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, GAIN_ID, m_input_gain);
+    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, INPUT_GAIN_ID, m_input_gain);
+    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, DELAY_MIX_ID, m_delay_mix);
     initiateComponents(p);
 
 }
@@ -380,7 +381,7 @@ void NewProjectAudioProcessorEditor::printComponents()
     m_delay_mix.setBounds(400, 710, 90, 90);
     m_delay_mix_label.setBounds(300, 735, 90, 30);
     
-    this->audioProcessor.m_visualiser.setBounds(110, 60, 930, 400);
+    this->audioProcessor.m_visualiser.setBounds(110, 60, 980, 400);
 
     m_volume_dial_1.setBounds(dials_distance_from_edeg + dials_horizontal_distance * 0, 580, size_of_dial, size_of_dial);
     m_volume_dial_2.setBounds(dials_distance_from_edeg + dials_horizontal_distance * 1, 580, size_of_dial, size_of_dial);
@@ -445,9 +446,13 @@ void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.setColour (juce::Colours::white);
     g.setFont (15.0f);
-    g.setColour(Colours::maroon);
+    g.setColour(Colours::maroon); 
     Rectangle<float> area(5, 5, 1195, 795);
     g.drawRoundedRectangle(area, 20.0f, 3.0f);
+    Rectangle<float> area_2(108, 58, 984, 404);
+    g.setColour(Colours::black);
+    g.drawRoundedRectangle(area_2, 15.0f, 10.0f);
+
 }
 
 void NewProjectAudioProcessorEditor::resized()
