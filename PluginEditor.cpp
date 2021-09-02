@@ -15,6 +15,10 @@ void NewProjectAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
     {
         audioProcessor.m_input_gain = m_input_gain.getValue();
     }
+    else if (slider == &m_output_gain)
+    {
+        audioProcessor.m_output_gain = m_output_gain.getValue();
+    }
     else if(slider == &m_delay_time)
     {
         audioProcessor.m_delay_time = m_delay_time.getValue();
@@ -38,6 +42,7 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioP
 
     slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, INPUT_GAIN_ID, m_input_gain);
     slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, DELAY_MIX_ID, m_delay_mix);
+    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, OUTPUT_GAIN_ID, m_output_gain);
     initiateComponents(p);
 
 }
@@ -68,6 +73,17 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
     m_input_gain.addListener(this);
     addAndMakeVisible(m_input_gain_label);
     m_input_gain_label.setText("input", juce::dontSendNotification);
+
+    addAndMakeVisible(m_output_gain);
+    m_output_gain.setRange(-60.0f, 6.0f, 0.01f);
+    m_output_gain.setSkewFactorFromMidPoint(0);
+    m_output_gain.setValue(0.0f);
+    m_output_gain.setTextValueSuffix("db");
+    m_output_gain.setTextBoxStyle(Slider::TextBoxBelow, true, 80, 20);
+    m_output_gain.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    m_output_gain.addListener(this);
+    addAndMakeVisible(m_output_gain_label);
+    m_output_gain_label.setText("output", juce::dontSendNotification);
 
     addAndMakeVisible(m_delay_time);
     m_delay_time.setRange(0.0f, 1500.0f, 1.0f);
@@ -373,6 +389,8 @@ void NewProjectAudioProcessorEditor::printComponents()
 
     m_input_gain.setBounds(13, 5, 80, 80);
     m_input_gain_label.setBounds(30, 70, 80, 50);
+    m_output_gain.setBounds(1110, 5, 80, 80);
+    m_output_gain_label.setBounds(1127, 70, 70, 50);
     m_pan_dials_label.setBounds(15, 510, 80, 50);
     m_volume_dials_label.setBounds(15, 580, 80, 50);
     m_on_off_buttons_label.setBounds(15, 650, 80, 50);

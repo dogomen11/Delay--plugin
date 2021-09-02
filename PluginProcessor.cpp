@@ -25,15 +25,19 @@ NewProjectAudioProcessor::NewProjectAudioProcessor()
                 .withOutput("Output", juce::AudioChannelSet::stereo(), true)
         #endif
             ),
-            parameters(*this, nullptr)
+                parameters(*this, nullptr)
         #endif
 {
+    
     NormalisableRange<float> m_input_gain_range(-60.0f, 12.0f, 0.01f);
     parameters.createAndAddParameter(INPUT_GAIN_ID, INPUT_GAIN_NAME, INPUT_GAIN_NAME,  m_input_gain_range, 0.0f, nullptr, nullptr);
+    NormalisableRange<float> m_output_gain_range(-60.0f, 12.0f, 0.01f);
+    parameters.createAndAddParameter(OUTPUT_GAIN_ID, OUTPUT_GAIN_NAME, OUTPUT_GAIN_NAME, m_output_gain_range, 0.0f, nullptr, nullptr);
     NormalisableRange<float> m_delay_mix__range(0.0f, 1.0f, 0.01f);
     parameters.createAndAddParameter(DELAY_MIX_ID, DELAY_MIX_NAME, DELAY_MIX_NAME, m_delay_mix__range, 0.5f, nullptr, nullptr);
 
     parameters.state = juce::ValueTree("saved_parameters");
+    
 }
 
 //destructor
@@ -114,6 +118,7 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     m_sample_rate = sampleRate;
 
     previous_gain = pow(10, *parameters.getRawParameterValue(INPUT_GAIN_ID) / 20);
+    m_output_gain = pow(10, *parameters.getRawParameterValue(OUTPUT_GAIN_ID) / 20);
     m_delay_mix = *parameters.getRawParameterValue(DELAY_MIX_ID);
 
 
@@ -202,11 +207,16 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         }
         //*************************************************************************************************
-
-        MyDelay current_delay(m_delay_buffer, m_write_position, buffer.getReadPointer(channel), m_delay_buffer.getReadPointer(channel), buffer.getWritePointer(channel) );
-        current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length, m_delay_mix);
-        current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
-        current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length, m_delay_mix);
+        
+        MyDelay current_delay(m_delay_buffer, m_write_position, buffer.getReadPointer(channel),
+                              m_delay_buffer.getReadPointer(channel), buffer.getWritePointer(channel), m_delay_mix, m_output_gain );
+        if (!current_delay.isMarked())
+        {
+            current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length);
+            current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
+            current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length);
+        }
+        //else...
     }
 
     m_write_position += buffer_length;

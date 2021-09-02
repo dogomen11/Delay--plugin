@@ -11,7 +11,7 @@
 #include "MyDelay.h"
 
 
-void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length, float m_delay_mix)
+void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length)
 {
     if (delay_buffer_length > buffer_length + m_write_position)
     {
@@ -26,7 +26,7 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const int de
 }
 
 void  MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
-    int m_delay_time, int m_sample_rate)
+                                  int m_delay_time, int m_sample_rate)
 {
     const int read_position = static_cast<int> (delay_buffer_length + m_write_position - (m_sample_rate * m_delay_time / 1000)) % delay_buffer_length;
     if (delay_buffer_length > buffer_length + read_position)
@@ -41,7 +41,7 @@ void  MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const
     }
 }
 
-void  MyDelay::feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length, float m_delay_mix)
+void  MyDelay::feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length)
 {
     if (delay_buffer_length > buffer_length + m_write_position)
     {
@@ -54,3 +54,19 @@ void  MyDelay::feedbackDelay(int channel, const int buffer_length, const int del
         m_delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, m_delay_mix, m_delay_mix);
     }
 }
+
+
+void MyDelay::addInstence(int instance_num)
+{
+    marked_instences++;
+    instences[instance_num] = 1;
+    //mark instens and make him play delayed sample
+}
+
+void MyDelay::decreseInstence(int instance_num)
+{
+    marked_instences--;
+    instences[instance_num] = 0;
+    //unmark instens and make him NOT play delayed sample 
+}
+

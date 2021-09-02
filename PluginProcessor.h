@@ -13,6 +13,8 @@
 
 #define INPUT_GAIN_ID "input gain"
 #define INPUT_GAIN_NAME "Input Gain"
+#define OUTPUT_GAIN_ID "output gain"
+#define OUTPUT_GAIN_NAME "Output Gain"
 #define DELAY_MIX_ID "delay mix"
 #define DELAY_MIX_NAME "Delay Mix"
 
@@ -65,9 +67,10 @@ public:
 
     //==============================================================================
 
-    float m_input_gain = 0.0;
+    float m_input_gain = 0.0f;
+    float m_output_gain = 0.0f;
     int m_delay_time = 400;
-    float m_delay_mix = 0.4;
+    float m_delay_mix = 0.4f;
 
     float previous_gain;
 

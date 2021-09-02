@@ -39,6 +39,8 @@ private:
 
     juce::Slider m_input_gain;
     juce::Label m_input_gain_label;
+    juce::Slider m_output_gain;
+    juce::Label m_output_gain_label;
     //******************************
     juce::Slider m_volume_dial_1;
     juce::Slider m_volume_dial_2;
