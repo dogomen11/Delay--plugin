@@ -29,9 +29,74 @@ void NewProjectAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
     }
 }
 
-void NewProjectAudioProcessorEditor::buttonClicked(Button*)
+void NewProjectAudioProcessorEditor::buttonClicked(Button* button)
 {
     DBG ("clicked");
+    if (button == &m_on_off_button_1 )
+    {
+        audioProcessor.m_on_off_button_array[0] = m_on_off_button_1.getToggleState();
+    }
+    if (button == &m_on_off_button_2)
+    {
+        audioProcessor.m_on_off_button_array[1] = m_on_off_button_2.getToggleState();
+    }
+    if (button == &m_on_off_button_3)
+    {
+        audioProcessor.m_on_off_button_array[2] = m_on_off_button_3.getToggleState();
+    }
+    if (button == &m_on_off_button_4)
+    {
+        audioProcessor.m_on_off_button_array[3] = m_on_off_button_4.getToggleState();
+    }
+    if (button == &m_on_off_button_5)
+    {
+        audioProcessor.m_on_off_button_array[4] = m_on_off_button_5.getToggleState();
+    }
+    if (button == &m_on_off_button_6)
+    {
+        audioProcessor.m_on_off_button_array[5] = m_on_off_button_6.getToggleState();
+    }
+    if (button == &m_on_off_button_7)
+    {
+        audioProcessor.m_on_off_button_array[6] = m_on_off_button_7.getToggleState();
+    }
+    if (button == &m_on_off_button_8)
+    {
+        audioProcessor.m_on_off_button_array[7] = m_on_off_button_8.getToggleState();
+    }
+    if (button == &m_on_off_button_9)
+    {
+        audioProcessor.m_on_off_button_array[8] = m_on_off_button_9.getToggleState();
+    }
+    if (button == &m_on_off_button_10)
+    {
+        audioProcessor.m_on_off_button_array[9] = m_on_off_button_10.getToggleState();
+    }
+    if (button == &m_on_off_button_11)
+    {
+        audioProcessor.m_on_off_button_array[10] = m_on_off_button_11.getToggleState();
+    }
+    if (button == &m_on_off_button_12)
+    {
+        audioProcessor.m_on_off_button_array[11] = m_on_off_button_12.getToggleState();
+    }
+    if (button == &m_on_off_button_13)
+    {
+        audioProcessor.m_on_off_button_array[12] = m_on_off_button_13.getToggleState();
+    }
+    if (button == &m_on_off_button_14)
+    {
+        audioProcessor.m_on_off_button_array[13] = m_on_off_button_14.getToggleState();
+    }
+    if (button == &m_on_off_button_15)
+    {
+        audioProcessor.m_on_off_button_array[14] = m_on_off_button_15.getToggleState();
+    }
+    if (button == &m_on_off_button_16)
+    {
+        audioProcessor.m_on_off_button_array[15] = m_on_off_button_16.getToggleState();
+    }
+
 }
 
 //==============================================================================
@@ -111,6 +176,7 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
     m_volume_dial_1.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     m_volume_dial_1.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
     m_volume_dial_1.addListener(this);
+    if (audioProcessor.marked == 0) { m_volume_dial_1.Component::setColour(4, Colours::blueviolet); }//change and copy to all
 
     addAndMakeVisible(m_volume_dial_2);
     m_volume_dial_2.setRange(-12.0f, 0.0f, 0.01f);

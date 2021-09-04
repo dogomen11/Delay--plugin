@@ -92,6 +92,8 @@ private:
     juce::ToggleButton m_on_off_button_14;
     juce::ToggleButton m_on_off_button_15;
     juce::ToggleButton m_on_off_button_16;
+
+
     //************************************
     juce::Label m_volume_dials_label;
     juce::Label m_pan_dials_label;

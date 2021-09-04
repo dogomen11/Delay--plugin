@@ -208,15 +208,23 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         }
         //*************************************************************************************************
         
-        MyDelay current_delay(m_delay_buffer, m_write_position, buffer.getReadPointer(channel),
-                              m_delay_buffer.getReadPointer(channel), buffer.getWritePointer(channel), m_delay_mix, m_output_gain );
-        if (!current_delay.isMarked())
+        //const float* buffer_data = buffer.getReadPointer(channel);
+        //const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
+        //float* dry_buffer = buffer.getWritePointer(channel);
+        MyDelay current_delay(m_delay_buffer, m_write_position,       buffer.getReadPointer(channel),
+                              m_delay_buffer.getReadPointer(channel), buffer.getWritePointer(channel),
+                              m_on_off_button_array,
+                              m_delay_mix,                            m_output_gain );
+        marked = current_delay.isMarked();
+        if (marked == 0)
         {
             current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length);
             current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
             current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length);
         }
         //else...
+
+        
     }
 
     m_write_position += buffer_length;

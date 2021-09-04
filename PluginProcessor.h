@@ -11,6 +11,8 @@
 #include <JuceHeader.h>
 #include "MyDelay.h"
 
+
+#define NUM_OF_INSTENCES 16
 #define INPUT_GAIN_ID "input gain"
 #define INPUT_GAIN_NAME "Input Gain"
 #define OUTPUT_GAIN_ID "output gain"
@@ -90,6 +92,9 @@ public:
         }
     };
     Visualiser m_visualiser;
+
+    bool m_on_off_button_array[NUM_OF_INSTENCES]{false};
+    int marked;
 
 private:
 
