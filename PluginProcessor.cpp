@@ -219,7 +219,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         if (marked == 0)
         {
             current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length);
-            current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
+            //current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
             current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length);
         }
         //else...
