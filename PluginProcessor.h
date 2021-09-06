@@ -94,7 +94,10 @@ public:
     Visualiser m_visualiser;
 
     bool m_on_off_button_array[NUM_OF_INSTENCES]{false};
+    float m_volume_dials[NUM_OF_INSTENCES]{ 0.0f };
+    float m_pan_dials[NUM_OF_INSTENCES]{ 0.0f };
     int marked;
+    Panner<float> m_delay_panner;
 
 private:
 

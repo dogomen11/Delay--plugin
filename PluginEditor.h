@@ -28,9 +28,7 @@ public:
     void juce::Button::Listener::buttonClicked(Button*) override;
     void initiateComponents(NewProjectAudioProcessor&);
     void printComponents();
-    
     ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> slider_attach;
-    //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
 
@@ -55,7 +53,7 @@ private:
     juce::Slider m_delay_mix;
     juce::Label m_delay_mix_label;
 
-
+    void reAlphaComponents();
 
     NewProjectAudioProcessor& audioProcessor;
 

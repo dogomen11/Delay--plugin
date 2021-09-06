@@ -121,11 +121,12 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     m_output_gain = pow(10, *parameters.getRawParameterValue(OUTPUT_GAIN_ID) / 20);
     m_delay_mix = *parameters.getRawParameterValue(DELAY_MIX_ID);
 
-
     dsp::ProcessSpec spec;
     spec.sampleRate = last_sample_rate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
+    m_delay_panner.setRule(PannerRule::balanced);
+    m_delay_panner.prepare(spec);
 
     updateParameters();
     m_visualiser.clear();
@@ -221,6 +222,8 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length);
             //current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
             current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length);
+            m_delay_panner.setPan(-1.0f);
+            //m_delay_panner.process(ProcessContextNonReplacing(
         }
         //else...
 

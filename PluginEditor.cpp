@@ -9,6 +9,9 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#define TRANSPARENT 0.5f
+#define BOLD 1.0f
+
 void NewProjectAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 {
     if (slider == &m_input_gain)
@@ -27,6 +30,20 @@ void NewProjectAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
     {
         audioProcessor.m_delay_mix = m_delay_mix.getValue();
     }
+    else
+    {
+        for (int i = 0; i < 16; i++)
+        {
+            if (slider == &m_volume_dials[i])
+            {
+                audioProcessor.m_volume_dials[i] = m_volume_dials[i].getValue();
+            }
+            if (slider == &m_pan_dials[i])
+            {
+                audioProcessor.m_pan_dials[i] = m_pan_dials[i].getValue();
+            }
+        }
+    }
 }
 
 void NewProjectAudioProcessorEditor::buttonClicked(Button* button)
@@ -37,9 +54,36 @@ void NewProjectAudioProcessorEditor::buttonClicked(Button* button)
         if (button == &m_on_off_buttons[i] )
         {
             audioProcessor.m_on_off_button_array[i] = m_on_off_buttons[i].getToggleState();
+            switch (m_on_off_buttons[i].getToggleState())
+            {
+                case true:
+                    audioProcessor.marked++;
+                    break;
+                case false:
+                    audioProcessor.marked--;
+                    break;
+            }
         }
     }
+    reAlphaComponents();
 
+}
+
+void NewProjectAudioProcessorEditor::reAlphaComponents()
+{
+    for (int i = 0; i < 16; i++)
+    {
+        if (audioProcessor.marked == 0)
+        {
+            m_volume_dials[i].setAlpha(TRANSPARENT);
+            m_pan_dials[i].setAlpha(TRANSPARENT);
+        }
+        else
+        {
+            m_volume_dials[i].setAlpha(BOLD);
+            m_pan_dials[i].setAlpha(BOLD);
+        }
+    }
 }
 
 //==============================================================================
@@ -123,16 +167,16 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
         m_volume_dials[i].setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
         m_volume_dials[i].addListener(this);
         m_volume_dials[i].setOpaque(false);
-        if (audioProcessor.marked == 0) { m_volume_dials[i].setAlpha(0.5f); }
+        if (audioProcessor.marked == 0) { m_volume_dials[i].setAlpha(TRANSPARENT); }
 
         addAndMakeVisible(m_pan_dials[i]);
-        m_pan_dials[i].setRange(-50.0f, 50.0f, 0.01f);
+        m_pan_dials[i].setRange(-1.0f, 1.0f, 0.01f);
         m_pan_dials[i].setValue(0.0f);
         m_pan_dials[i].setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
         m_pan_dials[i].setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
         m_pan_dials[i].addListener(this);
         m_pan_dials[i].setOpaque(false);
-        if (audioProcessor.marked == 0) { m_pan_dials[i].setAlpha(0.5f); }
+        if (audioProcessor.marked == 0) { m_pan_dials[i].setAlpha(TRANSPARENT); }
 
         addAndMakeVisible(m_on_off_buttons[i]);
         m_on_off_buttons[i].addListener(this);
