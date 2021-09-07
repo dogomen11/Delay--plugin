@@ -97,7 +97,8 @@ public:
     float m_volume_dials[NUM_OF_INSTENCES]{ 0.0f };
     float m_pan_dials[NUM_OF_INSTENCES]{ 0.0f };
     int marked;
-    Panner<float> m_delay_panner;
+    dsp::Panner<float> m_delay_panner[NUM_OF_INSTENCES];
+    //dsp::Reverb m_reverb[NUM_OF_INSTENCES];                      maybe replace with vol_dials
 
 private:
 

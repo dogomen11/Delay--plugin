@@ -125,8 +125,14 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     spec.sampleRate = last_sample_rate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
-    m_delay_panner.setRule(PannerRule::balanced);
-    m_delay_panner.prepare(spec);
+
+    for (int i = 0; i < 16; i++)
+    {
+        m_delay_panner[i].setRule(PannerRule::balanced);
+        m_delay_panner[i].prepare(spec);
+        m_delay_panner[i].setPan(m_pan_dials[i]);
+        //m_reverb[i].prepare(spec);  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! delete
+    }
 
     updateParameters();
     m_visualiser.clear();
@@ -178,7 +184,6 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
-    dsp::AudioBlock<float> block(buffer);
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
     {
@@ -222,13 +227,18 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length);
             //current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
             current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length);
-            m_delay_panner.setPan(-1.0f);
-            //m_delay_panner.process(ProcessContextNonReplacing(
         }
         //else...
-
-        
     }
+
+    dsp::AudioBlock<float> block(buffer);
+    for (int i = 0; i < 16; i++)
+    {
+        m_delay_panner[i].process(ProcessContextReplacing<float>(block));
+        //m_reverb.setEnabled(true);
+        //m_reverb.process(ProcessContextReplacing<float>(block));
+    }
+    
 
     m_write_position += buffer_length;
     m_write_position %= delay_buffer_length;
