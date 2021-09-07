@@ -213,10 +213,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         }
         //*************************************************************************************************
-        
-        //const float* buffer_data = buffer.getReadPointer(channel);
-        //const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
-        //float* dry_buffer = buffer.getWritePointer(channel);
+
         MyDelay current_delay(m_delay_buffer, m_write_position,       buffer.getReadPointer(channel),
                               m_delay_buffer.getReadPointer(channel), buffer.getWritePointer(channel),
                               m_on_off_button_array,
@@ -229,8 +226,19 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length);
         }
         //else...
+
+        // output gain change         **********************************************************************
+        auto* channelData = buffer.getWritePointer(channel);
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+        {
+            channelData[sample] = channelData[sample] * juce::Decibels::decibelsToGain(m_output_gain);
+
+        }
+
     }
 
+    m_visualiser.pushBuffer(buffer);
+    /*
     dsp::AudioBlock<float> block(buffer);
     for (int i = 0; i < 16; i++)
     {
@@ -238,12 +246,12 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         //m_reverb.setEnabled(true);
         //m_reverb.process(ProcessContextReplacing<float>(block));
     }
-    
+    */
 
     m_write_position += buffer_length;
     m_write_position %= delay_buffer_length;
 
-    m_visualiser.pushBuffer(buffer);
+    
 
 }
 

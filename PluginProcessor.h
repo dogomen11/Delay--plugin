@@ -91,7 +91,9 @@ public:
             
         }
     };
+
     Visualiser m_visualiser;
+    AudioBuffer<float> m_delay_buffer;
 
     bool m_on_off_button_array[NUM_OF_INSTENCES]{false};
     float m_volume_dials[NUM_OF_INSTENCES]{ 0.0f };
@@ -103,8 +105,6 @@ public:
 private:
 
     float last_sample_rate;
-
-    AudioBuffer<float> m_delay_buffer;
     int m_write_position{ 0 };
     int m_sample_rate{ 48000 };
 
