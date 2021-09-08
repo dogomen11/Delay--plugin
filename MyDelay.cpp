@@ -15,13 +15,13 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const int de
 {
     if (delay_buffer_length > buffer_length + m_write_position)
     {
-        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_length, m_delay_mix, m_delay_mix);
+        delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_length, m_delay_mix, m_delay_mix);
     }
     else
     {
         const int buffer_remaining = delay_buffer_length - m_write_position;
-        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_remaining, m_delay_mix, m_delay_mix);
-        m_delay_buffer.copyFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), m_delay_mix, m_delay_mix);
+        delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_remaining, m_delay_mix, m_delay_mix);
+        delay_buffer.copyFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), m_delay_mix, m_delay_mix);
     }
 }
 
@@ -46,13 +46,13 @@ void  MyDelay::feedbackDelay(int channel, const int buffer_length, const int del
 {
     if (delay_buffer_length > buffer_length + m_write_position)
     {
-        m_delay_buffer.addFromWithRamp(channel, m_write_position, dry_buffer, buffer_length, m_delay_mix, m_delay_mix);
+        delay_buffer.addFromWithRamp(channel, m_write_position, dry_buffer, buffer_length, m_delay_mix, m_delay_mix);
     }
     else
     {
         const int buffer_remaining = delay_buffer_length - m_write_position;
-        m_delay_buffer.addFromWithRamp(channel, buffer_remaining, dry_buffer, buffer_remaining, m_delay_mix, m_delay_mix);
-        m_delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, m_delay_mix, m_delay_mix);
+        delay_buffer.addFromWithRamp(channel, buffer_remaining, dry_buffer, buffer_remaining, m_delay_mix, m_delay_mix);
+        delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, m_delay_mix, m_delay_mix);
     }
 }
 

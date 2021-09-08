@@ -213,28 +213,43 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
         }
         //*************************************************************************************************
+        const float* buffer_data = buffer.getReadPointer(channel);
+        const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
+        float* dry_buffer = buffer.getWritePointer(channel);
 
-        MyDelay current_delay(m_delay_buffer, m_write_position,       buffer.getReadPointer(channel),
-                              m_delay_buffer.getReadPointer(channel), buffer.getWritePointer(channel),
+        MyDelay current_delay(m_delay_buffer,
+                              m_write_position,       
+                              buffer_data,
+                              delay_buffer_data, 
+                              dry_buffer,
                               m_on_off_button_array,
-                              m_delay_mix,                            m_output_gain );
+                              m_delay_mix,  
+                              m_output_gain );
         marked = current_delay.isMarked();
+
+        
         if (marked == 0)
         {
+            
+            fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_mix);
+            getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
+            feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_mix);
+        }
+        else
+        {
             current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length);
-            //current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
+            current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
             current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length);
         }
-        //else...
 
         // output gain change         **********************************************************************
-        auto* channelData = buffer.getWritePointer(channel);
+        channelData = buffer.getWritePointer(channel);
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
             channelData[sample] = channelData[sample] * juce::Decibels::decibelsToGain(m_output_gain);
 
         }
-
+        //*************************************************************************************************
     }
 
     m_visualiser.pushBuffer(buffer);
@@ -247,14 +262,58 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         //m_reverb.process(ProcessContextReplacing<float>(block));
     }
     */
-
     m_write_position += buffer_length;
     m_write_position %= delay_buffer_length;
 
-    
-
 }
 
+
+//copy from buffer to delay_buffer
+void NewProjectAudioProcessor::fillDelayBuffer(int channel, const int buffer_length,const int delay_buffer_length,
+                                               const float* buffer_data, const float* delay_buffer_data, float m_delay_mix)
+{
+    if (delay_buffer_length > buffer_length + m_write_position)
+    {
+        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_length, m_delay_mix, m_delay_mix);
+    }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - m_write_position;
+        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_remaining, m_delay_mix, m_delay_mix);
+        m_delay_buffer.copyFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), m_delay_mix, m_delay_mix);
+    }
+}
+
+void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
+    const float* buffer_data, const float* delay_buffer_data, int m_delay_time)
+{
+    const int read_position = static_cast<int> (delay_buffer_length + m_write_position - (m_sample_rate * m_delay_time / 1000)) % delay_buffer_length;
+    if (delay_buffer_length > buffer_length + read_position)
+    {
+        buffer.addFrom(channel, 0, delay_buffer_data + read_position, buffer_length);
+    }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - read_position;
+        buffer.copyFrom(channel, 0, delay_buffer_data + read_position, buffer_remaining);
+        buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
+    }
+}
+
+void NewProjectAudioProcessor::feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
+                                             float* dry_buffer, float m_delay_mix)
+{
+    if (delay_buffer_length > buffer_length + m_write_position)
+    {
+        m_delay_buffer.addFromWithRamp(channel, m_write_position, dry_buffer, buffer_length, m_delay_mix, m_delay_mix);
+    }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - m_write_position;
+        m_delay_buffer.addFromWithRamp(channel, buffer_remaining, dry_buffer, buffer_remaining, m_delay_mix, m_delay_mix);
+        m_delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, m_delay_mix, m_delay_mix);
+    }
+}
 
 
 //==============================================================================
