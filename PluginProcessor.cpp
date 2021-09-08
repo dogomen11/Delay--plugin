@@ -113,6 +113,7 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     const int num_input_channels = getNumInputChannels();
     const int delay_buffer_size = 2 * (sampleRate + samplesPerBlock);
     m_delay_buffer.setSize(num_input_channels, delay_buffer_size);
+    current_delay.setSize(num_input_channels, delay_buffer_size);
 
     last_sample_rate = sampleRate;
     m_sample_rate = sampleRate;
@@ -216,30 +217,20 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         const float* buffer_data = buffer.getReadPointer(channel);
         const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
         float* dry_buffer = buffer.getWritePointer(channel);
-
-        MyDelay current_delay(m_delay_buffer,
-                              m_write_position,       
-                              buffer_data,
-                              delay_buffer_data, 
-                              dry_buffer,
-                              m_on_off_button_array,
-                              m_delay_mix,  
-                              m_output_gain );
+        current_delay.updateArgs(m_write_position, m_on_off_button_array, m_delay_mix, m_delay_time);
         marked = current_delay.isMarked();
-
         
         if (marked == 0)
         {
-            
             fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_mix);
             getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
             feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_mix);
         }
         else
         {
-            current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length);
-            current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, m_delay_time, m_sample_rate);
-            current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length);
+            current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data);
+            current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_sample_rate);
+            current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer);
         }
 
         // output gain change         **********************************************************************
