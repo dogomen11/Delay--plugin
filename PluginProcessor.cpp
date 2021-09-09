@@ -127,7 +127,7 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
 
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < NUM_OF_INSTENCES; i++)
     {
         m_delay_panner[i].setRule(PannerRule::balanced);
         m_delay_panner[i].prepare(spec);
@@ -228,9 +228,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         }
         else
         {
-            current_delay.fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data);
-            current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_sample_rate);
-            current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer);
+            current_delay.fillFirstDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_volume_dials);
         }
     }
 

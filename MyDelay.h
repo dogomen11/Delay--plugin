@@ -7,7 +7,8 @@
 
   ==============================================================================
 */
-
+#ifndef MYDELAY
+#define MYDELAY
 #pragma once
 #include <JuceHeader.h>
 using namespace juce;
@@ -17,7 +18,7 @@ using namespace juce;
 class MyDelay
 {
     private:
-        AudioBuffer<float> delay_buffer;
+        AudioBuffer<float> delay_buffer[NUM_OF_INSTENCES];
         int write_position;
         int instences[NUM_OF_INSTENCES] = {};
         int marked_instences = 0;
@@ -42,8 +43,13 @@ class MyDelay
         void feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
             float* dry_buffer);
 
+        void fillFirstDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
+            const float* buffer_data, const float* delay_buffer_data, float instences_volume[]);
+
         void addInstence(int instance_num);
         void decreseInstence(int instance_num);
 
         int isMarked()                     { return marked_instences; }
 };
+
+#endif     // MYDELAY
