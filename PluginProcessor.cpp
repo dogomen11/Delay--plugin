@@ -219,7 +219,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         float* dry_buffer = buffer.getWritePointer(channel);
         current_delay.updateArgs(m_write_position, m_on_off_button_array, m_delay_mix, m_delay_time);
         marked = current_delay.isMarked();
-        
+
         if (marked == 0)
         {
             fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_mix);
@@ -232,18 +232,23 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
             current_delay.getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_sample_rate);
             current_delay.feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer);
         }
+    }
 
+    m_visualiser.pushBuffer(buffer);
+
+
+    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    {
+        auto* channelData = buffer.getWritePointer(channel);
         // output gain change         **********************************************************************
         channelData = buffer.getWritePointer(channel);
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            channelData[sample] = channelData[sample] * juce::Decibels::decibelsToGain(m_output_gain);
-
+            channelData[sample] = buffer.getSample(channel, sample) * juce::Decibels::decibelsToGain(m_output_gain);
         }
-        //*************************************************************************************************
     }
 
-    m_visualiser.pushBuffer(buffer);
+    
     /*
     dsp::AudioBlock<float> block(buffer);
     for (int i = 0; i < 16; i++)
