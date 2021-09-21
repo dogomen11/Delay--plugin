@@ -15,6 +15,7 @@ void MyDelay::updateArgs(int m_write_position, bool m_on_off_button_array[], flo
     write_position = m_write_position;
     delay_mix = m_delay_mix;
     delay_time = m_delay_time;
+    marked_instences = 0;
     for (int i = 0; i < NUM_OF_INSTENCES; i++)
     {
         instences[i] = m_on_off_button_array[i];
