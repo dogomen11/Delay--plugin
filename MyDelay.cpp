@@ -28,10 +28,7 @@ void MyDelay::updateArgs(int m_write_position, bool m_on_off_button_array[], flo
 
 void MyDelay::setSize(int new_num_channels, int new_num_samples)
 {
-    for (int i = 0; i < NUM_OF_INSTENCES; i++)
-    {
-        delay_buffer[i].setSize(new_num_channels, new_num_samples);
-    }
+    delay_buffer.setSize(new_num_channels, new_num_samples * NUM_OF_INSTENCES);
 }
 
 /*
@@ -87,11 +84,11 @@ void MyDelay::fillFirstDelayBuffer(int channel, const int buffer_length, const i
 {
     for (int i = 0; i < NUM_OF_INSTENCES; i++)
     {
-        delay_buffer[i].copyFromWithRamp(channel, write_position, delay_buffer[0].getReadPointer(channel), buffer_length, 1, 1);
-        auto* channelData = delay_buffer[i].getWritePointer(channel);
-        for (int sample = 0; sample < delay_buffer[i].getNumSamples(); ++sample)
+        delay_buffer.copyFromWithRamp(channel, write_position + (i * buffer_length), delay_buffer.getReadPointer(channel), buffer_length, 1, 1);
+        auto* channelData = delay_buffer.getWritePointer(channel);
+        for (int sample = 0; sample < delay_buffer.getNumSamples(); ++sample)
         {
-            channelData[sample] = delay_buffer[i].getSample(channel, sample) * juce::Decibels::decibelsToGain(instences_volume[i]);
+            channelData[sample] = delay_buffer.getSample(channel, sample) * juce::Decibels::decibelsToGain(instences_volume[i]);
         }
     }
 }

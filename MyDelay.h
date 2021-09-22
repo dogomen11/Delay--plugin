@@ -18,7 +18,7 @@ using namespace juce;
 class MyDelay
 {
     private:
-        AudioBuffer<float> delay_buffer[NUM_OF_INSTENCES];
+        AudioBuffer<float> delay_buffer;
         int write_position;
         int instences[NUM_OF_INSTENCES] = {};
         int marked_instences = 0;
