@@ -203,6 +203,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     
     const int buffer_length = buffer.getNumSamples();
     const int delay_buffer_length = m_delay_buffer.getNumSamples();
+    const int my_delay_buffer_length = current_delay.getNumSamples();
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
@@ -216,6 +217,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         //*************************************************************************************************
         const float* buffer_data = buffer.getReadPointer(channel);
         const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
+        const float* my_delay_buffer_data = current_delay.getReadPointer(channel);
         float* dry_buffer = buffer.getWritePointer(channel);
         current_delay.updateArgs(m_write_position, m_on_off_button_array, m_delay_mix, m_delay_time);
         marked = current_delay.isMarked();
@@ -228,7 +230,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         }
         else
         {
-            current_delay.fillFirstDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_volume_dials);
+            current_delay.fillFirstDelayBuffer(channel, buffer_length, my_delay_buffer_length, buffer_data, my_delay_buffer_data, m_volume_dials);
         }
     }
 
@@ -238,7 +240,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer(channel);
-        // output gain change         **********************************************************************
+        // output gain change         *****************************************************************************
         channelData = buffer.getWritePointer(channel);
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {

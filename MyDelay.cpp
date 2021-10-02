@@ -28,8 +28,20 @@ void MyDelay::updateArgs(int m_write_position, bool m_on_off_button_array[], flo
 
 void MyDelay::setSize(int new_num_channels, int new_num_samples)
 {
-    delay_buffer.setSize(new_num_channels, new_num_samples * NUM_OF_INSTENCES);
+    int new_delay_size = new_num_samples * NUM_OF_INSTENCES;
+    delay_buffer.setSize(new_num_channels, new_delay_size);
 }
+
+int MyDelay::getNumSamples()
+{
+    return delay_buffer.getNumSamples();
+}
+
+const float* MyDelay::getReadPointer(int channelNumber)
+{
+    return delay_buffer.getReadPointer(channelNumber);
+}
+
 
 /*
 void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length, const float* buffer_data, const float* delay_buffer_data)
