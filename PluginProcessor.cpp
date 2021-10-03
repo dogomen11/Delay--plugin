@@ -132,8 +132,9 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
         m_delay_panner[i].setRule(PannerRule::balanced);
         m_delay_panner[i].prepare(spec);
         m_delay_panner[i].setPan(m_pan_dials[i]);
-        //m_reverb[i].prepare(spec);  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! delete
     }
+
+    m_reverb.prepare(spec);
 
     updateParameters();
     m_visualiser.clear();
@@ -230,7 +231,10 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         }
         else
         {
-            current_delay.fillFirstDelayBuffer(channel, buffer_length, my_delay_buffer_length, buffer_data, my_delay_buffer_data, m_volume_dials);
+            //current_delay.fillFirstDelayBuffer(channel, buffer_length, my_delay_buffer_length, buffer_data, my_delay_buffer_data, m_volume_dials);
+            fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_mix);
+            getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
+            feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_mix);
         }
     }
 
@@ -284,6 +288,18 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
     const float* buffer_data, const float* delay_buffer_data, int m_delay_time)
 {
     const int read_position = static_cast<int> (delay_buffer_length + m_write_position - (m_sample_rate * m_delay_time / 1000)) % delay_buffer_length;
+    //TODO: try to use instence position everytime ime filling the buffer again, and do an effect before the buffer fill
+    //
+    //
+    //
+    if (m_on_off_button_array[instence_position] == true)
+    {
+        dsp::AudioBlock<float> temp_delay_block(buffer);
+        m_reverb.setEnabled(true);
+        m_reverb.process(ProcessContextReplacing<float>(temp_delay_block));
+    }
+    //
+    //
     if (delay_buffer_length > buffer_length + read_position)
     {
         buffer.addFrom(channel, 0, delay_buffer_data + read_position, buffer_length);
@@ -294,6 +310,9 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
         buffer.copyFrom(channel, 0, delay_buffer_data + read_position, buffer_remaining);
         buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
     }
+    instence_position = (instence_position + 1) % 16;
+    m_reverb.setEnabled(false);
+    m_reverb.reset();
 }
 
 void NewProjectAudioProcessor::feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
