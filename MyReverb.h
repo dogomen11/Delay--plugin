@@ -3,39 +3,20 @@
 
     MyReverb.h
     Created: 10 Oct 2021 9:53:28pm
-    Author:  97252
+    Author:  dogom
 
   ==============================================================================
 */
-
+#ifndef MYREVERB
+#define MYREVERB
 #pragma once
-
 #include <JuceHeader.h>
 #include <deque>
 using namespace juce;
 
 //==============================================================================
 class MyReverb
-	{
-	public:
-		MyReverb();
-		~MyReverb();
-
-		bool getIsClipping();
-
-		void setBalanceCurrentValue(float balance_value);
-		void setTimeCurrentValue(float time_value);
-		void setDampeningCurrentValue(float dampening_value);
-		void setInitCurrentValue(float init_value);
-	
-		void setInputGain(float in_cain_chosen);
-		void setOutputGain(float out_gain_chosen);
-	
-		void setInputBuffer(AudioBuffer <float>& new_file_buffer);
-			
-		void setupMyReverb();
-		AudioBuffer <float>& addReverb();
-
+{
 	private:
 
 		//  Coefficients to set up the reverb architecture
@@ -55,22 +36,46 @@ class MyReverb
 		ReferenceCountedArray <dsp::IIR::Coefficients <float>> dampening_filters_coeffs_tab;
 		OptionalScopedPointer <dsp::IIR::Filter <float>> tonal_correction_filter_ptr;
 		dsp::IIR::Coefficients <float>::Ptr tonal_correction_filter_coeffs_ptr;
-	
+
 		//  Input and output buffers 
-	
+
 		AudioBuffer <float> input_buffer;
 		AudioBuffer <float> output_buffer;
 
-	//  Values read from sliders
+		//  Values read from sliders
 
 		float balance_current_value;
 		float time_current_value;
 		float dampening_current_value;
 		float init_current_value;
 
-	//  Inside class methods
+		//  Inside class methods
 
 		void setupGainC(float coeff = 1.0);
 
 		JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MyReverb)
+
+	public:
+
+		MyReverb();
+		~MyReverb();
+
+		bool getIsClipping();
+
+		void setBalanceCurrentValue(float balance_value);
+		void setTimeCurrentValue(float time_value);
+		void setDampeningCurrentValue(float dampening_value);
+		void setInitCurrentValue(float init_value);
+	
+		void setInputGain(float in_gain_chosen);
+		void setOutputGain(float out_gain_chosen);
+	
+		void setInputBuffer(AudioBuffer <float>& new_buffer);
+			
+		void setupMyReverb();
+		AudioBuffer <float>& addReverb();
+
+	
 };
+
+#endif     // MYREVERB

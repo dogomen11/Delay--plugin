@@ -3,7 +3,7 @@
 
     MyReverb.cpp
     Created: 10 Oct 2021 9:53:28pm
-    Author:  97252
+    Author:  dogom
 
   ==============================================================================
 */
@@ -16,7 +16,7 @@ MyReverb::MyReverb() : num_delay_lines(12),
 						b_gain(1.0),
 						balance_dry(1.0),
 						feedback_matrix(12, 12),
-						delay_line_lengths{ 601, 1399, 1747, 2269, 2707, 3089, 3323, 3571, 3911, 4127, 4639, 4999 },
+						delay_line_lengths{ 601, 1399, 1747, 2269, 2707, 3089, 3323, 3571, 3911, 4127, 4639, 4999 },     //try different occurences
 						is_clipping(false),
 						input_gain(0.0),
 						output_gain(0.0),
@@ -28,29 +28,30 @@ MyReverb::MyReverb() : num_delay_lines(12),
 {
 			setupGainC(0.0);
 		
-			dsp::Matrix <float> toeplitzVector(12, 1);
-			dsp::Matrix <float> circulantMatrix(12, 12);
-			dsp::Matrix <float> uVector(12, 1);
-			dsp::Matrix <float> uVectorTransposed(1, 12);
-		
-			toeplitzVector.clear();
-			toeplitzVector(1, 0) = 1.0;
-
-			circulantMatrix = circulantMatrix.toeplitz(toeplitzVector, 12);
-			for (int cnt = 0; cnt < 11; ++cnt)
+			dsp::Matrix <float> toeplitz_vector(12, 1);
+			dsp::Matrix <float> circulant_matrix(12, 12);    //toeplitz matrix 12X12
+			dsp::Matrix <float> u_vector(12, 1);
+			dsp::Matrix <float> u_vector_transposed(1, 12);
+			
+			//initiate circulant_mat as toeplitz by a vector
+			toeplitz_vector.clear();
+			toeplitz_vector(1, 0) = 1.0f;
+			circulant_matrix = circulant_matrix.toeplitz(toeplitz_vector, 12);
+			for (int counter = 0; counter < 11; ++counter)
 			{
-				circulantMatrix(cnt, cnt + 1) = 0.0;
+				circulant_matrix(counter, counter + (int)1) = 0.0;
 			}
-			circulantMatrix(0, 11) = 1.0;
-			for (int cnt = 0; cnt < 12; ++cnt)
+			circulant_matrix(0, 11) = 1.0;
+			for (int counter = 0; counter < 12; ++counter)
 			{
-				uVector(cnt, 0) = 1.0;
-				uVectorTransposed(0, cnt) = 1.0;
+				u_vector(counter, 0) = 1.0;
+				u_vector_transposed(0, counter) = 1.0;
 			}
-			feedback_matrix = circulantMatrix - ((uVector * (2.0 / num_delay_lines)) * uVectorTransposed);
+			//assign
+			feedback_matrix = circulant_matrix - ((u_vector * (2.0 / num_delay_lines)) * u_vector_transposed); 
 		
-			for (int cnt = 0; cnt < 12; ++cnt)
-				feedback_matrix_rows.add(new dsp::Matrix <float>(1, 12, feedback_matrix.getRawDataPointer() + cnt * 12));
+			for (int counter = 0; counter < 12; ++counter)
+				feedback_matrix_rows.add(new dsp::Matrix <float>(1, 12, feedback_matrix.getRawDataPointer() + counter * (int)12));
 		
 			input_buffer.clear();
 			output_buffer.clear();
@@ -58,72 +59,60 @@ MyReverb::MyReverb() : num_delay_lines(12),
 			dampening_filters_coeffs_tab.clear();
 }
 
-MyReverb::~MyReverb()
-{
-}
+MyReverb::~MyReverb() {}
 
 bool MyReverb::getIsClipping()
 {
 	return is_clipping;
 }
 
-void MyReverb::setBalanceCurrentValue(float balanceValue)
+void MyReverb::setBalanceCurrentValue(float balance_value)
 {
-	balance_current_value = balanceValue;
+	balance_current_value = balance_value;
 }
 
-void MyReverb::setTimeCurrentValue(float timeValue)
+void MyReverb::setTimeCurrentValue(float time_value)
 {
-	time_current_value = timeValue;
+	time_current_value = time_value;
 }
 
-void MyReverb::setDampeningCurrentValue(float dampeningValue)
+void MyReverb::setDampeningCurrentValue(float dampening_value)
 {
-	dampening_current_value = dampeningValue;
+	dampening_current_value = dampening_value;
 }
 
-void MyReverb::setInitCurrentValue(float initValue)
+void MyReverb::setInitCurrentValue(float init_value)
 {
-	init_current_value = initValue;
+	init_current_value = init_value;
 }
 
-void MyReverb::setInputGain(float inGainChosen)
+void MyReverb::setInputGain(float in_gain_chosen)
 {
-	input_gain = inGainChosen;
+	input_gain = in_gain_chosen;
 }
 
-void MyReverb::setOutputGain(float outGainChosen)
+void MyReverb::setOutputGain(float out_gain_chosen)
 {
-	output_gain = outGainChosen;
+	output_gain = out_gain_chosen;
 }
 
-void MyReverb::setInputBuffer(AudioBuffer <float>& newFileBuffer)
+void MyReverb::setInputBuffer(AudioBuffer <float>& new_buffer)
 {
-	input_buffer.makeCopyOf(newFileBuffer);
+	input_buffer.makeCopyOf(new_buffer);
 	input_buffer_size = input_buffer.getNumSamples();
 	is_clipping = false;
 }
 
 void MyReverb::setupMyReverb()
 {
-
-	output_buffer.setSize(input_buffer.getNumChannels(),
-		input_buffer_size
-		+ int(44100.0 * time_current_value)
-		+ int(std::ceil(44.1 * init_current_value))
-		+ 11025,
-		false,
-		true,
-		false);
-	input_buffer.setSize(input_buffer.getNumChannels(),
-		output_buffer.getNumSamples(),
-		true,
-		true,
-		false);
+	int new_num_samples = input_buffer_size + int(44100.0 * time_current_value) + int(std::ceil(44.1 * init_current_value)) + 11025;
+	output_buffer.setSize(input_buffer.getNumChannels(), new_num_samples, false, true, false);
+	input_buffer.setSize(input_buffer.getNumChannels(), output_buffer.getNumSamples(), true, true, false);
 
 	b_gain = Decibels::decibelsToGain(input_gain);
 	output_gain = Decibels::decibelsToGain(output_gain);
 
+	// take care of balanced gain
 	if (balance_current_value <= 0.0)
 	{
 		setupGainC(std::pow(balance_current_value + 1.0, 4));
@@ -135,25 +124,26 @@ void MyReverb::setupMyReverb()
 		balance_dry = std::pow(1.0 - balance_current_value, 4);
 	}
 
+	//damp and correction clear
 	dampening_filters_tab.clear();
 	dampening_filters_coeffs_tab.clear();
 	tonal_correction_filter_ptr.clear();
 	tonal_correction_filter_coeffs_ptr.reset();
 
-	float minAlphaConst = (4.0 * time_current_value) / (-3.0 * 4999.0 * (1.0 / 44100.0) * std::log(10.0));
-	float minAlpha = std::sqrt(1.0 / (1.0 - minAlphaConst));
-	float alpha = minAlpha + ((100.0 - dampening_current_value) * ((1.0 - minAlpha) / 100.0));
+	float min_alpha_const = (4.0 * time_current_value) / (-3.0 * 4999.0 * (1.0 / 44100.0) * std::log(10.0));
+	float min_alpha = std::sqrt(1.0 / (1.0 - min_alpha_const));
+	float alpha = min_alpha + ((100.0 - dampening_current_value) * ((1.0 - min_alpha) / 100.0));
 
-	float gCoeff = 0.0;
-	float pCoeff = 0.0;
-	float constElement1 = std::log(10.0) / 4.0;
-	float constElement2 = 1.0 - (1.0 / std::pow(alpha, 2));
+	float g_coeff = 0.0;
+	float p_coeff = 0.0;
+	float const_element1 = std::log(10.0) / 4.0;
+	float const_element2 = 1.0 - (1.0 / std::pow(alpha, 2));
 
-	for (int cnt = 0; cnt < 12; ++cnt)
+	for (int counter = 0; counter < 12; ++counter)
 	{
-		gCoeff = std::pow(10.0, (-3.0 * delay_line_lengths[cnt] * (1.0 / 44100.0)) / time_current_value);
-		pCoeff = constElement1 * constElement2 * std::log10(gCoeff);
-		dampening_filters_coeffs_tab.add(new dsp::IIR::Coefficients <float>(gCoeff * (1.0 - pCoeff), 0.0, 1.0, -pCoeff));
+		g_coeff = std::pow(10.0, (-3.0 * delay_line_lengths[counter] * (1.0 / 44100.0)) / time_current_value);
+		p_coeff = const_element1 * const_element2 * std::log10(g_coeff);
+		dampening_filters_coeffs_tab.add(new dsp::IIR::Coefficients <float>(g_coeff * (1.0 - p_coeff), 0.0, 1.0, -p_coeff));
 		dampening_filters_tab.add(new dsp::IIR::Filter <float>(dampening_filters_coeffs_tab.getLast()));
 	}
 
@@ -168,56 +158,57 @@ AudioBuffer <float>& MyReverb::addReverb()
 {
 	ScopedNoDenormals noDenormals;
 
-	int initDelayLineLength = 1;
+	int init_delay_line_length = 1;
 
 	if (init_current_value != 0.0)
-		initDelayLineLength = int(std::round(init_current_value * 44.1));
+		init_delay_line_length = int(std::round(init_current_value * 44.1));
 
-	std::deque <float> initDelayLine(initDelayLineLength, 0.0);
-	OwnedArray <std::deque <float>> delayLines;
-	dsp::Matrix <float> tempMatrix(12, 1);
-	float outSample = 0.0;
-	float currentSample = 0.0;
-	dsp::Matrix <float> currentMatrixProduct(1, 1);
+	std::deque <float> init_delay_line(init_delay_line_length, 0.0);
+	OwnedArray <std::deque <float>> delay_lines;
+	dsp::Matrix <float> temp_matrix(12, 1);
+	float out_sample = 0.0;
+	float current_sample = 0.0;
+	dsp::Matrix <float> current_matrix_product(1, 1);
 
-	for (int cnt = 0; cnt < 12; ++cnt)
-		delayLines.add(new std::deque <float>(4999, 0.0));
+	for (int counter = 0; counter < 12; ++counter)
+	{
+		delay_lines.add(new std::deque <float>(4999, 0.0));
+	}
 
 	for (auto channel = 0; channel < input_buffer.getNumChannels(); ++channel)
 	{
-		float* outputWrite = output_buffer.getWritePointer(channel);
-		const float* inputRead = input_buffer.getReadPointer(channel);
+		float* output_write = output_buffer.getWritePointer(channel);
+		const float* input_read = input_buffer.getReadPointer(channel);
 
 		for (auto sample = 0; sample < output_buffer.getNumSamples(); ++sample)
 		{
-			outSample = 0.0;
-			for (int cnt = 0; cnt < 12; ++cnt)
+			out_sample = 0.0;
+			for (int counter = 0; counter < 12; ++counter)
 			{
-				tempMatrix(cnt, 0) = (*delayLines[cnt])[delay_line_lengths[cnt] - 1];
-				outSample += tempMatrix(cnt, 0) * c_gain[cnt][channel];
-
-				currentMatrixProduct = *feedback_matrix_rows[cnt] * tempMatrix;
-				currentSample = (inputRead[sample] * b_gain) + *(currentMatrixProduct.getRawDataPointer());
-				currentSample = dampening_filters_tab[cnt]->processSample(currentSample);
-				delayLines[cnt]->push_front(currentSample);
-				delayLines[cnt]->pop_back();
+				temp_matrix(counter, 0) = (*delay_lines[counter])[delay_line_lengths[counter] - (int)1];
+				out_sample += temp_matrix(counter, 0) * c_gain[counter][channel];
+				current_matrix_product = *feedback_matrix_rows[counter] * temp_matrix;
+				current_sample = (input_read[sample] * b_gain) + *(current_matrix_product.getRawDataPointer());
+				current_sample = dampening_filters_tab[counter]->processSample(current_sample);
+				delay_lines[counter]->push_front(current_sample);
+				delay_lines[counter]->pop_back();
 			}
 
-			outSample = tonal_correction_filter_ptr.get()->processSample(outSample);
-			initDelayLine.push_front(outSample);
-			initDelayLine.pop_back();
-			outputWrite[sample] = ((inputRead[sample] * b_gain * balance_dry)
-				+ initDelayLine.back()) * output_gain;
+			out_sample = tonal_correction_filter_ptr.get()->processSample(out_sample);
+			init_delay_line.push_front(out_sample);
+			init_delay_line.pop_back();
+			output_write[sample] = ((input_read[sample] * b_gain * balance_dry)
+				+ init_delay_line.back()) * output_gain;
 
 			if (is_clipping == false)
 			{
-				if (outputWrite[sample] > 1.0 || outputWrite[sample] < -1.0)
+				if (output_write[sample] > 1.0 || output_write[sample] < -1.0)
 					is_clipping = true;
 			}
 		}
 
-		for (int cnt = 0; cnt < 12; ++cnt)
-			dampening_filters_tab[cnt]->reset();
+		for (int counter = 0; counter < 12; ++counter)
+			dampening_filters_tab[counter]->reset();
 		tonal_correction_filter_ptr->reset();
 	}
 
@@ -227,15 +218,16 @@ AudioBuffer <float>& MyReverb::addReverb()
 
 void MyReverb::setupGainC(float coeff)
 {
+	//set up the coeffs to output normalized value
 	unsigned short flag = 1;
-	for (int cnt1 = 0; cnt1 < 12; ++cnt1)
+	for (int counter_1 = 0; counter_1 < 12; ++counter_1)
 	{
-		for (int cnt2 = 0; cnt2 < 2; ++cnt2)
+		for (int counter_2 = 0; counter_2 < 2; ++counter_2)
 		{
 			if (flag % 3 != 0 && flag != 7 && flag != 8)
-				c_gain[cnt1][cnt2] = 1.0 * coeff;
+				c_gain[counter_1][counter_2] = 1.0 * coeff;
 			else
-				c_gain[cnt1][cnt2] = -1.0 * coeff;
+				c_gain[counter_1][counter_2] = -1.0 * coeff;
 			++flag;
 			if (flag == 9) flag = 1;
 		}
