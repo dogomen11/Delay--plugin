@@ -134,7 +134,6 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
         m_delay_panner[i].setPan(m_pan_dials[i]);
     }
 
-    m_reverb.prepare(spec);
 
     updateParameters();
     m_visualiser.clear();
@@ -295,8 +294,7 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
     if (m_on_off_button_array[instence_position] == true)
     {
         dsp::AudioBlock<float> temp_delay_block(buffer);
-        m_reverb.setEnabled(true);
-        m_reverb.process(ProcessContextReplacing<float>(temp_delay_block));
+        //
     }
     //
     //
@@ -311,8 +309,6 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
         buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
     }
     instence_position = (instence_position + 1) % 16;
-    m_reverb.setEnabled(false);
-    m_reverb.reset();
 }
 
 void NewProjectAudioProcessor::feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
