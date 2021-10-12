@@ -17,19 +17,19 @@ using namespace juce;
 //==============================================================================
 /**
 */
-class NewProjectAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                        public juce::Slider::Listener,
-                                        public juce::Button::Listener
+class NewProjectAudioProcessorEditor : public juce::AudioProcessorEditor,
+    public juce::Slider::Listener,
+    public juce::Button::Listener
 {
 public:
-    NewProjectAudioProcessorEditor (NewProjectAudioProcessor&);
+    NewProjectAudioProcessorEditor(NewProjectAudioProcessor&);
     ~NewProjectAudioProcessorEditor() override;
     void juce::Slider::Listener::sliderValueChanged(Slider* slider) override;
     void juce::Button::Listener::buttonClicked(Button*) override;
     void initiateComponents(NewProjectAudioProcessor&);
     void printComponents();
     ScopedPointer <AudioProcessorValueTreeState::SliderAttachment> slider_attach;
-    void paint (juce::Graphics&) override;
+    void paint(juce::Graphics&) override;
     void resized() override;
 
 
@@ -53,9 +53,11 @@ private:
     juce::Slider m_delay_mix;
     juce::Label m_delay_mix_label;
 
+    ImageComponent m_background;
+
     void reAlphaComponents();
 
     NewProjectAudioProcessor& audioProcessor;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(NewProjectAudioProcessorEditor)
 };

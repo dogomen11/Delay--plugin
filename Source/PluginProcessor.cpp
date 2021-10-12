@@ -16,28 +16,28 @@ using namespace juce::dsp;
 
 //contructor
 NewProjectAudioProcessor::NewProjectAudioProcessor()
-        #ifndef JucePlugin_PreferredChannelConfigurations
-            : AudioProcessor(BusesProperties()
-        #if ! JucePlugin_IsMidiEffect
-        #if ! JucePlugin_IsSynth
-                .withInput("Input", juce::AudioChannelSet::stereo(), true)
-        #endif
-                .withOutput("Output", juce::AudioChannelSet::stereo(), true)
-        #endif
-            ),
-                parameters(*this, nullptr)
-        #endif
+#ifndef JucePlugin_PreferredChannelConfigurations
+    : AudioProcessor(BusesProperties()
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+#endif
+        .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+#endif
+    ),
+    parameters(*this, nullptr)
+#endif
 {
-    
+
     NormalisableRange<float> m_input_gain_range(-60.0f, 12.0f, 0.01f);
-    parameters.createAndAddParameter(INPUT_GAIN_ID, INPUT_GAIN_NAME, INPUT_GAIN_NAME,  m_input_gain_range, 0.0f, nullptr, nullptr);
+    parameters.createAndAddParameter(INPUT_GAIN_ID, INPUT_GAIN_NAME, INPUT_GAIN_NAME, m_input_gain_range, 0.0f, nullptr, nullptr);
     NormalisableRange<float> m_output_gain_range(-60.0f, 12.0f, 0.01f);
     parameters.createAndAddParameter(OUTPUT_GAIN_ID, OUTPUT_GAIN_NAME, OUTPUT_GAIN_NAME, m_output_gain_range, 0.0f, nullptr, nullptr);
     NormalisableRange<float> m_delay_mix__range(0.0f, 1.0f, 0.01f);
     parameters.createAndAddParameter(DELAY_MIX_ID, DELAY_MIX_NAME, DELAY_MIX_NAME, m_delay_mix__range, 0.5f, nullptr, nullptr);
 
     parameters.state = juce::ValueTree("saved_parameters");
-    
+
 }
 
 //destructor
@@ -53,29 +53,29 @@ const juce::String NewProjectAudioProcessor::getName() const
 
 bool NewProjectAudioProcessor::acceptsMidi() const
 {
-   #if JucePlugin_WantsMidiInput
+#if JucePlugin_WantsMidiInput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool NewProjectAudioProcessor::producesMidi() const
 {
-   #if JucePlugin_ProducesMidiOutput
+#if JucePlugin_ProducesMidiOutput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool NewProjectAudioProcessor::isMidiEffect() const
 {
-   #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 double NewProjectAudioProcessor::getTailLengthSeconds() const
@@ -94,21 +94,21 @@ int NewProjectAudioProcessor::getCurrentProgram()
     return 0;
 }
 
-void NewProjectAudioProcessor::setCurrentProgram (int index)
+void NewProjectAudioProcessor::setCurrentProgram(int index)
 {
 }
 
-const juce::String NewProjectAudioProcessor::getProgramName (int index)
+const juce::String NewProjectAudioProcessor::getProgramName(int index)
 {
     return {};
 }
 
-void NewProjectAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void NewProjectAudioProcessor::changeProgramName(int index, const juce::String& newName)
 {
 }
 
 //================================================================================================================================
-void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     const int num_input_channels = getNumInputChannels();
     const int delay_buffer_size = 2 * (sampleRate + samplesPerBlock);
@@ -132,8 +132,8 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
         m_delay_panner[i].setRule(PannerRule::balanced);
         m_delay_panner[i].prepare(spec);
         m_delay_panner[i].setPan(m_pan_dials[i]);
-        //m_reverb[i].prepare(spec);  //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! delete
     }
+
 
     updateParameters();
     m_visualiser.clear();
@@ -147,24 +147,24 @@ void NewProjectAudioProcessor::releaseResources()
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool NewProjectAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool NewProjectAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
-  #if JucePlugin_IsMidiEffect
-    juce::ignoreUnused (layouts);
+#if JucePlugin_IsMidiEffect
+    juce::ignoreUnused(layouts);
     return true;
-  #else
+#else
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
-     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
     // This checks if the input layout matches the output layout
-   #if ! JucePlugin_IsSynth
+#if ! JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
-   #endif
+#endif
 
     return true;
-  #endif
+#endif
 }
 #endif
 
@@ -180,17 +180,17 @@ void NewProjectAudioProcessor::process(dsp::ProcessContextReplacing<float> conte
 }
 
 //================================================================================================================================
-void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    juce::ScopedNoDenormals noDenormals;
-    auto totalNumInputChannels  = getTotalNumInputChannels();
+    ScopedNoDenormals noDenormals;
+    auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
     {
         buffer.clear(i, 0, buffer.getNumSamples());
     }
-    
+
     float current_gain = pow(10, *parameters.getRawParameterValue(INPUT_GAIN_ID) / 20);
     if (current_gain == previous_gain)
     {
@@ -200,9 +200,10 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     {
         buffer.applyGainRamp(0, buffer.getNumSamples(), previous_gain, current_gain);
     }
-    
+
     const int buffer_length = buffer.getNumSamples();
     const int delay_buffer_length = m_delay_buffer.getNumSamples();
+    const int my_delay_buffer_length = current_delay.getNumSamples();
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
@@ -216,6 +217,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         //*************************************************************************************************
         const float* buffer_data = buffer.getReadPointer(channel);
         const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
+        const float* my_delay_buffer_data = current_delay.getReadPointer(channel);
         float* dry_buffer = buffer.getWritePointer(channel);
         current_delay.updateArgs(m_write_position, m_on_off_button_array, m_delay_mix, m_delay_time);
         marked = current_delay.isMarked();
@@ -228,7 +230,10 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         }
         else
         {
-            //current_delay.fillFirstDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_volume_dials);
+            //current_delay.fillFirstDelayBuffer(channel, buffer_length, my_delay_buffer_length, buffer_data, my_delay_buffer_data, m_volume_dials);
+            fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_mix);
+            getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
+            feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_mix);
         }
     }
 
@@ -238,7 +243,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
         auto* channelData = buffer.getWritePointer(channel);
-        // output gain change         **********************************************************************
+        // output gain change         *****************************************************************************
         channelData = buffer.getWritePointer(channel);
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
@@ -246,7 +251,7 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
         }
     }
 
-    
+
     /*
     dsp::AudioBlock<float> block(buffer);
     for (int i = 0; i < 16; i++)
@@ -263,8 +268,8 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
 
 
 //copy from buffer to delay_buffer
-void NewProjectAudioProcessor::fillDelayBuffer(int channel, const int buffer_length,const int delay_buffer_length,
-                                               const float* buffer_data, const float* delay_buffer_data, float m_delay_mix)
+void NewProjectAudioProcessor::fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
+    const float* buffer_data, const float* delay_buffer_data, float m_delay_mix)
 {
     if (delay_buffer_length > buffer_length + m_write_position)
     {
@@ -282,6 +287,17 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
     const float* buffer_data, const float* delay_buffer_data, int m_delay_time)
 {
     const int read_position = static_cast<int> (delay_buffer_length + m_write_position - (m_sample_rate * m_delay_time / 1000)) % delay_buffer_length;
+    //TODO: try to use instence position everytime ime filling the buffer again, and do an effect before the buffer fill
+    //
+    //
+    //
+    if (m_on_off_button_array[instence_position] == true)
+    {
+        dsp::AudioBlock<float> temp_delay_block(buffer);
+        //
+    }
+    //
+    //
     if (delay_buffer_length > buffer_length + read_position)
     {
         buffer.addFrom(channel, 0, delay_buffer_data + read_position, buffer_length);
@@ -292,10 +308,11 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
         buffer.copyFrom(channel, 0, delay_buffer_data + read_position, buffer_remaining);
         buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
     }
+    instence_position = (instence_position + 1) % 16;
 }
 
 void NewProjectAudioProcessor::feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
-                                             float* dry_buffer, float m_delay_mix)
+    float* dry_buffer, float m_delay_mix)
 {
     if (delay_buffer_length > buffer_length + m_write_position)
     {
@@ -318,11 +335,11 @@ bool NewProjectAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* NewProjectAudioProcessor::createEditor()
 {
-    return new NewProjectAudioProcessorEditor (*this);
+    return new NewProjectAudioProcessorEditor(*this);
 }
 
 
-void NewProjectAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void NewProjectAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
@@ -333,15 +350,15 @@ void NewProjectAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 
 }
 
-void NewProjectAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void NewProjectAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
 
-    std::unique_ptr<XmlElement> the_parameters( getXmlFromBinary(data, sizeInBytes) );
+    std::unique_ptr<XmlElement> the_parameters(getXmlFromBinary(data, sizeInBytes));
     if (the_parameters != nullptr)
     {
-        if (the_parameters->hasTagName(parameters.state.getType() ) )
+        if (the_parameters->hasTagName(parameters.state.getType()))
         {
             parameters.state = ValueTree::fromXml(*the_parameters);
         }

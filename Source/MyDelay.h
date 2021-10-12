@@ -15,41 +15,57 @@ using namespace juce;
 
 #define NUM_OF_INSTENCES 16
 
+//==============================================================================
+
 class MyDelay
 {
-    private:
-        AudioBuffer<float> delay_buffer[NUM_OF_INSTENCES];
-        int write_position;
-        int instences[NUM_OF_INSTENCES] = {};
-        int marked_instences = 0;
-        float delay_mix;
-        int delay_time;
-  
-    public:
-        MyDelay() = default;
+private:
 
-        ~MyDelay() = default;
+    // Delay initial parameters
 
-        void updateArgs(int m_write_position, bool m_on_off_button_array[], float m_delay_mix, int m_delay_time);
+    int write_position;
+    int instences[NUM_OF_INSTENCES] = {};
+    int marked_instences;
+    float delay_mix;
+    int delay_time;
+    float input_gain;
+    float output_gain;
+    AudioBuffer<float> delay_buffer;
 
-        void setSize(int new_num_channels, int new_num_samples);
+public:
 
-        void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
-            const float* buffer_data, const float* delay_buffer_data);
+    MyDelay();
+    ~MyDelay();
 
-        void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
-            const float* buffer_data, const float* delay_buffer_data, int m_sample_rate);
+    void setDelayMix(float delay_mix_chosen);
+    void setDelayTime(int delay_time_chosen);
+    void setInputGain(float in_gain_chosen);
+    void setOutputGain(float out_gain_chosen);
 
-        void feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
-            float* dry_buffer);
+    void setInputBuffer(AudioBuffer <float>& new_buffer);
 
-        void fillFirstDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
-            const float* buffer_data, const float* delay_buffer_data, float instences_volume[]);
+    void updateArgs(int m_write_position, bool m_on_off_button_array[], float m_delay_mix, int m_delay_time);
+    void setSize(int new_num_channels, int new_num_samples);
+    int getNumSamples();
+    const float* getReadPointer(int channelNumber);
 
-        void addInstence(int instance_num);
-        void decreseInstence(int instance_num);
+    void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
+        const float* buffer_data, const float* delay_buffer_data);
 
-        int isMarked()                     { return marked_instences; }
+    void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
+        const float* buffer_data, const float* delay_buffer_data, int m_sample_rate);
+
+    void feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
+        float* dry_buffer);
+
+    void fillFirstDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
+        const float* buffer_data, const float* delay_buffer_data, float instences_volume[]);
+
+
+    void addInstence(int instance_num);
+    void decreseInstence(int instance_num);
+
+    int isMarked();
 };
 
 #endif     // MYDELAY

@@ -22,7 +22,7 @@ void NewProjectAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
     {
         audioProcessor.m_output_gain = m_output_gain.getValue();
     }
-    else if(slider == &m_delay_time)
+    else if (slider == &m_delay_time)
     {
         audioProcessor.m_delay_time = m_delay_time.getValue();
     }
@@ -48,20 +48,20 @@ void NewProjectAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
 
 void NewProjectAudioProcessorEditor::buttonClicked(Button* button)
 {
-    DBG ("clicked");
+    DBG("clicked");
     for (int i = 0; i < 16; i++)
     {
-        if (button == &m_on_off_buttons[i] )
+        if (button == &m_on_off_buttons[i])
         {
             audioProcessor.m_on_off_button_array[i] = m_on_off_buttons[i].getToggleState();
             switch (m_on_off_buttons[i].getToggleState())
             {
-                case true:
-                    audioProcessor.marked++;
-                    break;
-                case false:
-                    audioProcessor.marked--;
-                    break;
+            case true:
+                audioProcessor.marked++;
+                break;
+            case false:
+                audioProcessor.marked--;
+                break;
             }
         }
     }
@@ -87,8 +87,8 @@ void NewProjectAudioProcessorEditor::reAlphaComponents()
 }
 
 //==============================================================================
-NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor (NewProjectAudioProcessor& p)
-                                    : AudioProcessorEditor (&p), audioProcessor (p)
+NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor(NewProjectAudioProcessor& p)
+    : AudioProcessorEditor(&p), audioProcessor(p)
 {
     setSize(1200, 800);
 
@@ -114,6 +114,8 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
     addAndMakeVisible(m_on_off_buttons_label);
     m_on_off_buttons_label.setText("on/off", juce::dontSendNotification);
     addAndMakeVisible(this->audioProcessor.m_visualiser);
+
+    addAndMakeVisible(m_background);
     //*****************************************************************************
     addAndMakeVisible(m_input_gain);
     m_input_gain.setRange(-60.0f, 6.0f, 0.01f);
@@ -181,7 +183,7 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
         addAndMakeVisible(m_on_off_buttons[i]);
         m_on_off_buttons[i].addListener(this);
     }
-    
+
 
 }
 
@@ -192,6 +194,8 @@ void NewProjectAudioProcessorEditor::printComponents()
     int dials_distance_from_edeg = 68;
     int size_of_dial = 62;
 
+    //m_background.setBounds(0, 0, 1200, 800);
+
     m_input_gain.setBounds(13, 5, 80, 80);
     m_input_gain_label.setBounds(30, 70, 80, 50);
     m_output_gain.setBounds(1110, 5, 80, 80);
@@ -200,9 +204,9 @@ void NewProjectAudioProcessorEditor::printComponents()
     m_volume_dials_label.setBounds(15, 580, 80, 50);
     m_on_off_buttons_label.setBounds(15, 650, 80, 50);
     m_delay_time.setBounds(200, 710, 90, 90);
-    m_delay_time_label.setBounds(100, 735, 90, 30);
+    m_delay_time_label.setBounds(120, 735, 90, 30);
     m_delay_mix.setBounds(400, 710, 90, 90);
-    m_delay_mix_label.setBounds(300, 735, 90, 30);
+    m_delay_mix_label.setBounds(320, 735, 90, 30);
     this->audioProcessor.m_visualiser.setBounds(110, 60, 980, 400);
     for (int i = 0; i < 16; i++)
     {
@@ -216,19 +220,29 @@ void NewProjectAudioProcessorEditor::printComponents()
 
 
 //==============================================================================
-void NewProjectAudioProcessorEditor::paint (juce::Graphics& g)
+void NewProjectAudioProcessorEditor::paint(juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    g.setColour (juce::Colours::white);
-    g.setFont (15.0f);
-    g.setColour(Colours::maroon); 
+    g.setColour(juce::Colours::white);
+    g.setFont(15.0f);
+    g.setColour(Colours::maroon);
     Rectangle<float> area(5, 5, 1195, 795);
     g.drawRoundedRectangle(area, 20.0f, 3.0f);
     Rectangle<float> area_2(108, 58, 984, 404);
     g.setColour(Colours::black);
     g.drawRoundedRectangle(area_2, 15.0f, 10.0f);
+    Image background_image = ImageCache::getFromMemory(BinaryData::background_2_png, BinaryData::background_2_pngSize);
+    if (!background_image.isNull())
+    {
+        m_background.setImage(background_image, RectanglePlacement::stretchToFit);
+    }
+    else
+    {
+        jassert(!background_image.isNull());
+    }
+    g.drawImageAt(background_image, 0, 0);
 
 }
 
