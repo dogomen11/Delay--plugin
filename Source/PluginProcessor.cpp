@@ -134,7 +134,6 @@ void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
         m_delay_panner[i].setPan(m_pan_dials[i]);
     }
 
-
     updateParameters();
     m_visualiser.clear();
 
@@ -221,6 +220,8 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         float* dry_buffer = buffer.getWritePointer(channel);
         current_delay.updateArgs(m_write_position, m_on_off_button_array, m_delay_mix, m_delay_time);
         marked = current_delay.isMarked();
+        m_reverb.setInputBuffer(buffer);
+        m_reverb.setupMyReverb();
 
         if (marked == 0)
         {
@@ -230,10 +231,7 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         }
         else
         {
-            //current_delay.fillFirstDelayBuffer(channel, buffer_length, my_delay_buffer_length, buffer_data, my_delay_buffer_data, m_volume_dials);
-            fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_mix);
-            getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
-            feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_mix);
+            buffer.makeCopyOf(m_reverb.addReverb());
         }
     }
 
@@ -287,7 +285,7 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
     const float* buffer_data, const float* delay_buffer_data, int m_delay_time)
 {
     const int read_position = static_cast<int> (delay_buffer_length + m_write_position - (m_sample_rate * m_delay_time / 1000)) % delay_buffer_length;
-    //TODO: try to use instence position everytime ime filling the buffer again, and do an effect before the buffer fill
+    /*//TODO: try to use instence position everytime ime filling the buffer again, and do an effect before the buffer fill
     //
     //
     //
@@ -297,7 +295,7 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
         //
     }
     //
-    //
+    /*/
     if (delay_buffer_length > buffer_length + read_position)
     {
         buffer.addFrom(channel, 0, delay_buffer_data + read_position, buffer_length);

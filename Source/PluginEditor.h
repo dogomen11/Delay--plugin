@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "MyDelay.h"
+#include "../exodus/Source/ModernDial/ModernDial.h"
 
 using namespace juce;
 
@@ -48,9 +49,9 @@ private:
     juce::Label m_pan_dials_label;
     juce::Label m_on_off_buttons_label;
 
-    juce::Slider m_delay_time;
+    Slider m_delay_time;
     juce::Label m_delay_time_label;
-    juce::Slider m_delay_mix;
+    Slider m_delay_mix;
     juce::Label m_delay_mix_label;
 
     ImageComponent m_background;
