@@ -24,6 +24,7 @@ private:
     // Delay initial parameters
 
     int write_position;
+    int sample_rate;
     int instences[NUM_OF_INSTENCES] = {};
     int marked_instences;
     float delay_mix;
@@ -32,6 +33,7 @@ private:
     float output_gain;
     AudioBuffer<float> delay_buffer;
     int delay_buffer_length = 0;
+    int outputing_stage = 0;
 
 public:
 
@@ -45,21 +47,19 @@ public:
 
     void setInputBuffer(AudioBuffer <float>& new_buffer);
 
-    void updateArgs(int m_write_position, bool m_on_off_button_array[], float m_delay_mix, int m_delay_time);
+    void updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], float m_delay_mix, int m_delay_time);
     void setSize(int new_num_channels, int new_num_samples);
     int getNumSamples();
     const float* getReadPointer(int channelNumber);
 
-    void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
-        const float* buffer_data, const float* delay_buffer_data);
+    void fillDelayBuffer(int channel, const int buffer_length, const float* buffer_data, float instences_volume[]);
 
-    void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
-        const float* buffer_data, const float* delay_buffer_data, int m_sample_rate);
+    void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length);
 
     void feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
         float* dry_buffer);
 
-    void fillFirstDelayBuffer(int channel, const int buffer_length, const float* buffer_data, float instences_volume[]);
+    
 
     void addInstence(int instance_num);
     void decreseInstence(int instance_num);

@@ -54,9 +54,10 @@ void MyDelay::setSize(int new_num_channels, int new_num_samples)
     delay_buffer_length = delay_buffer.getNumSamples();
 }
 
-void MyDelay::updateArgs(int m_write_position, bool m_on_off_button_array[], float m_delay_mix, int m_delay_time)
+void MyDelay::updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], float m_delay_mix, int m_delay_time)
 {
     write_position = m_write_position;
+    sample_rate = m_sample_rate;
     delay_mix = m_delay_mix;
     delay_time = m_delay_time;
     marked_instences = 0;
@@ -80,18 +81,13 @@ const float* MyDelay::getReadPointer(int channelNumber)
     return delay_buffer.getReadPointer(channelNumber);
 }
 
-
-
-
-
-
-void MyDelay::fillFirstDelayBuffer(int channel, const int buffer_length, const float* buffer_data, float instences_volume[])
+void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float* buffer_data, float instences_volume[])
 {
     for (int i = 0; i < NUM_OF_INSTENCES; i++)
     {
         delay_buffer.copyFromWithRamp(channel, write_position + (i * buffer_length), delay_buffer.getReadPointer(channel), buffer_length, 1, 1);
         auto* channelData = delay_buffer.getWritePointer(channel);
-        for (int sample = 0; sample < delay_buffer.getNumSamples(); ++sample)
+        for (int sample = 0; sample < buffer_length; ++sample)
         {
             channelData[sample] = delay_buffer.getSample(channel, sample) * juce::Decibels::decibelsToGain(instences_volume[i]);
         }
@@ -102,15 +98,32 @@ void MyDelay::fillFirstDelayBuffer(int channel, const int buffer_length, const f
 
 
 
-void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
-    const float* buffer_data, const float* delay_buffer_data, int m_sample_rate)
+void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length)
 {
-    const int read_position = static_cast<int> (delay_buffer_length + write_position - (m_sample_rate * delay_time / 1000)) % delay_buffer_length;
+    const float* delay_buffer_data = delay_buffer.getReadPointer(channel);
+    const float* instence_to_copy = delay_buffer_data + (outputing_stage * buffer_length);
+    jassert(outputing_stage <= 15 && buffer_length <= delay_buffer_length);
+    buffer.copyFrom(channel, 0, instence_to_copy, buffer_length);
+    if (channel == 1)
+    {
+        outputing_stage = (outputing_stage + 1) % 16;
+    }
+
+    /*
+    const int read_position = static_cast<int> (delay_buffer_length + m_write_position - (m_sample_rate * m_delay_time / 1000)) % delay_buffer_length;
     if (delay_buffer_length > buffer_length + read_position)
     {
         buffer.addFrom(channel, 0, delay_buffer_data + read_position, buffer_length);
     }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - read_position;
+        buffer.copyFrom(channel, 0, delay_buffer_data + read_position, buffer_remaining);
+        buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
+    }*/
 }
+
+
 
 
 void MyDelay::addInstence(int instance_num)
