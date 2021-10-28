@@ -113,7 +113,6 @@ void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     const int num_input_channels = getNumInputChannels();
     const int delay_buffer_size = 2 * (sampleRate + samplesPerBlock);
     m_delay_buffer.setSize(num_input_channels, delay_buffer_size);
-    current_delay.setSize(num_input_channels, delay_buffer_size);
 
     last_sample_rate = sampleRate;
     m_sample_rate = sampleRate;
@@ -200,25 +199,25 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         buffer.applyGainRamp(0, buffer.getNumSamples(), previous_gain, current_gain);
     }
 
+
+    current_delay.updateArgs(m_write_position, m_on_off_button_array, m_delay_mix, m_delay_time);
     const int buffer_length = buffer.getNumSamples();
     const int delay_buffer_length = m_delay_buffer.getNumSamples();
-    const int my_delay_buffer_length = current_delay.getNumSamples();
+
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        // input gain change         **********************************************************************
+        // input gain change         
         auto* channelData = buffer.getWritePointer(channel);
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
             channelData[sample] = channelData[sample] * juce::Decibels::decibelsToGain(m_input_gain);
 
         }
-        //*************************************************************************************************
         const float* buffer_data = buffer.getReadPointer(channel);
         const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
-        const float* my_delay_buffer_data = current_delay.getReadPointer(channel);
+        //const float* my_delay_buffer_data = current_delay.getReadPointer(channel);
         float* dry_buffer = buffer.getWritePointer(channel);
-        current_delay.updateArgs(m_write_position, m_on_off_button_array, m_delay_mix, m_delay_time);
         marked = current_delay.isMarked();
         m_reverb.setInputBuffer(buffer);
         m_reverb.setupMyReverb();
@@ -237,11 +236,10 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 
     m_visualiser.pushBuffer(buffer);
 
-
+    // output gain change
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
     {
-        auto* channelData = buffer.getWritePointer(channel);
-        // output gain change         *****************************************************************************
+        auto* channelData = buffer.getWritePointer(channel);               
         channelData = buffer.getWritePointer(channel);
         for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
@@ -267,7 +265,7 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 
 //copy from buffer to delay_buffer
 void NewProjectAudioProcessor::fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
-    const float* buffer_data, const float* delay_buffer_data, float m_delay_mix)
+                                                const float* buffer_data, const float* delay_buffer_data, float m_delay_mix)
 {
     if (delay_buffer_length > buffer_length + m_write_position)
     {
@@ -280,6 +278,12 @@ void NewProjectAudioProcessor::fillDelayBuffer(int channel, const int buffer_len
         m_delay_buffer.copyFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), m_delay_mix, m_delay_mix);
     }
 }
+
+
+
+
+
+
 
 void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
     const float* buffer_data, const float* delay_buffer_data, int m_delay_time)

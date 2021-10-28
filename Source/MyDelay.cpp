@@ -11,12 +11,14 @@
 #include "MyDelay.h"
 
 MyDelay::MyDelay() : write_position(0.0),
-marked_instences(0),
-delay_mix(0.0),
-delay_time(0.3),
-delay_buffer(),
-input_gain(0.0),
-output_gain(0.0) {}
+                    marked_instences(0),
+                    delay_mix(0.0),
+                    delay_time(0.3),
+                    input_gain(0.0),
+                    output_gain(0.0) 
+{
+    delay_buffer.clear();
+}
 
 MyDelay::~MyDelay() {}
 
@@ -50,6 +52,7 @@ void MyDelay::setSize(int new_num_channels, int new_num_samples)
 {
     int new_delay_size = new_num_samples * NUM_OF_INSTENCES;
     delay_buffer.setSize(new_num_channels, new_delay_size);
+    delay_buffer_length = delay_buffer.getNumSamples();
 }
 
 void MyDelay::updateArgs(int m_write_position, bool m_on_off_button_array[], float m_delay_mix, int m_delay_time)
@@ -68,7 +71,6 @@ void MyDelay::updateArgs(int m_write_position, bool m_on_off_button_array[], flo
     }
 }
 
-
 int MyDelay::getNumSamples()
 {
     return delay_buffer.getNumSamples();
@@ -79,10 +81,8 @@ const float* MyDelay::getReadPointer(int channelNumber)
     return delay_buffer.getReadPointer(channelNumber);
 }
 
-void MyDelay::fillFirstDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
-    const float* buffer_data, const float* delay_buffer_data, float instences_volume[])
+void MyDelay::fillFirstDelayBuffer(int channel, const int buffer_length, const float* buffer_data, float instences_volume[])
 {
-    ScopedNoDenormals noDenormals;
     for (int i = 0; i < NUM_OF_INSTENCES; i++)
     {
         delay_buffer.copyFromWithRamp(channel, write_position + (i * buffer_length), delay_buffer.getReadPointer(channel), buffer_length, 1, 1);

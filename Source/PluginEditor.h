@@ -11,7 +11,6 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "MyDelay.h"
-#include "../exodus/Source/ModernDial/ModernDial.h"
 
 using namespace juce;
 

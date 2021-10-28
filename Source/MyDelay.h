@@ -31,6 +31,7 @@ private:
     float input_gain;
     float output_gain;
     AudioBuffer<float> delay_buffer;
+    int delay_buffer_length = 0;
 
 public:
 
@@ -58,13 +59,10 @@ public:
     void feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
         float* dry_buffer);
 
-    void fillFirstDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
-        const float* buffer_data, const float* delay_buffer_data, float instences_volume[]);
-
+    void fillFirstDelayBuffer(int channel, const int buffer_length, const float* buffer_data, float instences_volume[]);
 
     void addInstence(int instance_num);
     void decreseInstence(int instance_num);
-
     int isMarked();
 };
 
