@@ -111,8 +111,8 @@ void NewProjectAudioProcessor::changeProgramName(int index, const juce::String& 
 void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     const int num_input_channels = getNumInputChannels();
-    const int delay_buffer_size = (sampleRate + samplesPerBlock);
-    m_delay_buffer.setSize(num_input_channels, delay_buffer_size * 2);   //2 times the buffer size
+    const int delay_buffer_size = (m_sample_rate + samplesPerBlock);         //m_sample_rate need to be sampleRate future update
+    m_delay_buffer.setSize(num_input_channels, delay_buffer_size * 2);   
     current_delay.setSize(num_input_channels, delay_buffer_size);
 
     last_sample_rate = sampleRate;

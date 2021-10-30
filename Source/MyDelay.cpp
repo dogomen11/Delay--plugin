@@ -89,7 +89,7 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float*
         auto* channelData = delay_buffer.getWritePointer(channel);
         for (int sample = 0; sample < buffer_length; ++sample)
         {
-            channelData[sample] = delay_buffer.getSample(channel, sample) * juce::Decibels::decibelsToGain(instences_volume[i]);
+            channelData[sample] = delay_buffer.getSample(channel, sample);// *juce::Decibels::decibelsToGain(instences_volume[i]);
         }
     }
 }
@@ -103,7 +103,7 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
     const float* delay_buffer_data = delay_buffer.getReadPointer(channel);
     const float* instence_to_copy = delay_buffer_data + (outputing_stage * buffer_length);
     jassert(outputing_stage <= 15 && buffer_length <= delay_buffer_length);
-    buffer.copyFrom(channel, 0, instence_to_copy, buffer_length);
+    buffer.addFrom(channel, 0, instence_to_copy, buffer_length);
     if (channel == 1)
     {
         outputing_stage = (outputing_stage + 1) % 16;
