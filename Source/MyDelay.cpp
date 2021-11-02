@@ -165,7 +165,7 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
         buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
     }
     time_strecher++;
-    if (channel == 1  &&  time_strecher == buffer_length/16)
+    if (channel == 1  &&  time_strecher == sample_rate)
     {
         outputing_stage = (outputing_stage + 1) % 16;
         time_strecher = 0;
