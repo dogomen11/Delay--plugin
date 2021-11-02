@@ -125,7 +125,7 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float*
 }
 
 
-void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, float vol_dials[], float m_pan_dials[])
+void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, float* dry_buffer, float vol_dials[], float m_pan_dials[])
 {
     /*
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
@@ -136,6 +136,7 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
 
     buffer.addFrom(channel, 0, instence_to_copy, buffer_length);
     */
+    feedbackDelay(channel, buffer_length, dry_buffer);
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     AudioBuffer temp(delay_buffer);
     auto* channelData = temp.getWritePointer(channel);
@@ -144,11 +145,11 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
     {
         if (instences[outputing_stage] == 1)
         {
-            channelData[sample] = temp.getSample(channel, sample) * juce::Decibels::decibelsToGain(vol_dials[outputing_stage]);
+            channelData[sample] = temp.getSample(channel, sample) * vol_dials[outputing_stage];
         }
         else
         {
-            channelData[sample] = 0;
+            temp.clear();
         }
     }
     setPannerValue(m_pan_dials[outputing_stage]);

@@ -59,7 +59,7 @@ public:
 
     void fillDelayBuffer(int channel, const int buffer_length, const float* buffer_data);
 
-    void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, float vol_dials[], float m_pan_dials[]);
+    void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, float* dry_buffer, float vol_dials[], float m_pan_dials[]);
 
     void feedbackDelay(int channel, const int buffer_length, float* dry_buffer);
 
