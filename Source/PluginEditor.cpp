@@ -163,8 +163,8 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
     for (int i = 0; i < 16; i++)
     {
         addAndMakeVisible(m_volume_dials[i]);
-        m_volume_dials[i].setRange(-60.0f, 0.0f, 0.01f);
-        m_volume_dials[i].setValue(-60.0f);
+        m_volume_dials[i].setRange(-1.0f, 0.0f, 0.01f);
+        m_volume_dials[i].setValue(0.0f);
         m_volume_dials[i].setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
         m_volume_dials[i].setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
         m_volume_dials[i].addListener(this);

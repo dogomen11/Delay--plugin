@@ -101,7 +101,6 @@ public:
     float m_volume_dials[NUM_OF_INSTENCES]{ 0.0f };
     float m_pan_dials[NUM_OF_INSTENCES]{ 0.0f };
     int marked = 0;
-    dsp::Panner<float> m_delay_panner[NUM_OF_INSTENCES];
     MyReverb m_reverb;                                                //maybe replace with vol_dials
 
     void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,

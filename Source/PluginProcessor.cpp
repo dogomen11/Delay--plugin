@@ -113,7 +113,7 @@ void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     const int num_input_channels = getNumInputChannels();
     const int delay_buffer_size = (m_sample_rate + samplesPerBlock);         //m_sample_rate need to be sampleRate future update
     m_delay_buffer.setSize(num_input_channels, delay_buffer_size * 2);   
-    current_delay.setSize(num_input_channels, delay_buffer_size);
+    current_delay.setSize(num_input_channels, delay_buffer_size * 2);
 
     last_sample_rate = sampleRate;
     m_sample_rate = sampleRate;
@@ -127,13 +127,7 @@ void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
 
-    for (int i = 0; i < NUM_OF_INSTENCES; i++)
-    {
-        m_delay_panner[i].setRule(PannerRule::balanced);
-        m_delay_panner[i].prepare(spec);
-        m_delay_panner[i].setPan(m_pan_dials[i]);
-    }
-
+    current_delay.setPannerSpec(spec);
     updateParameters();
     m_visualiser.clear();
 
@@ -217,9 +211,9 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         }
         const float* buffer_data = buffer.getReadPointer(channel);
         const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
-        //const float* my_delay_buffer_data = current_delay.getReadPointer(channel);
         float* dry_buffer = buffer.getWritePointer(channel);
         marked = current_delay.isMarked();
+        // reverb need to work! TODO
         m_reverb.setInputBuffer(buffer);
         m_reverb.setupMyReverb();
 
@@ -232,8 +226,9 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         else
         {
             //buffer.makeCopyOf(m_reverb.addReverb());
-            current_delay.fillDelayBuffer(channel, buffer_length, buffer_data, m_volume_dials);
-            current_delay.getFromDelayBuffer(buffer, channel, buffer_length);
+            current_delay.fillDelayBuffer(channel, buffer_length, buffer_data);
+            current_delay.getFromDelayBuffer(buffer, channel, buffer_length, m_volume_dials, m_pan_dials);
+            current_delay.feedbackDelay(channel, buffer_length, dry_buffer);
         }
     }
 

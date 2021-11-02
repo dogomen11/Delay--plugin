@@ -18,6 +18,7 @@ MyDelay::MyDelay() : write_position(0.0),
                     output_gain(1.0) 
 {
     delay_buffer.clear();
+    delay_panner.reset();
 }
 
 MyDelay::~MyDelay() {}
@@ -49,8 +50,7 @@ void MyDelay::setInputBuffer(AudioBuffer<float>& new_buffer)
 
 void MyDelay::setSize(int new_num_channels, int new_num_samples)
 {
-    int new_delay_size = new_num_samples * NUM_OF_INSTENCES;
-    delay_buffer.setSize(new_num_channels, new_delay_size);
+    delay_buffer.setSize(new_num_channels, new_num_samples);
     delay_buffer_length = delay_buffer.getNumSamples();
 }
 
@@ -81,8 +81,27 @@ const float* MyDelay::getReadPointer(int channelNumber)
     return delay_buffer.getReadPointer(channelNumber);
 }
 
-void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float* buffer_data, float instences_volume[])
+void MyDelay::setPannerSpec(dsp::ProcessSpec new_spec)
 {
+    delay_panner.prepare(new_spec);
+    delay_panner.setRule(juce::dsp::PannerRule::balanced);
+}
+
+void MyDelay::setPannerValue(float current_pan)
+{
+    delay_panner.setPan(current_pan);
+}
+
+void MyDelay::processPan(AudioBuffer<float>& buffer_to_pan)
+{
+    juce::dsp::AudioBlock<float> block(buffer_to_pan);
+    delay_panner.process(juce::dsp::ProcessContextReplacing(block));
+}
+
+
+void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float* buffer_data)
+{
+    /*
     for (int i = 0; i < NUM_OF_INSTENCES; i++)
     {
         delay_buffer.copyFromWithRamp(channel, (i * buffer_length), buffer_data, buffer_length, input_gain, output_gain);
@@ -91,15 +110,23 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float*
         {
             channelData[sample] = delay_buffer.getSample(channel, sample) * juce::Decibels::decibelsToGain(instences_volume[i]);
         }
+    }*/
+    if (delay_buffer_length > buffer_length + write_position)
+    {
+        delay_buffer.copyFromWithRamp(channel, write_position, buffer_data, buffer_length, delay_mix, delay_mix);
+    }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - write_position;
+        delay_buffer.copyFromWithRamp(channel, write_position, buffer_data, buffer_remaining, delay_mix, delay_mix);
+        delay_buffer.copyFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), delay_mix, delay_mix);
     }
 }
 
 
-
-
-
-void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length)
+void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, float vol_dials[], float m_pan_dials[])
 {
+    /*
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     const float* delay_buffer_data = delay_buffer.getReadPointer(channel);
     const float* instence_to_copy = delay_buffer_data + (outputing_stage * buffer_length);
@@ -107,28 +134,57 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
 
 
     buffer.addFrom(channel, 0, instence_to_copy, buffer_length);
-
-    if (channel == 1)
+    */
+    const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
+    AudioBuffer temp(delay_buffer);
+    //temp.applyGain(vol_dials[outputing_stage]);
+    auto* channelData = temp.getWritePointer(channel);
+    channelData = temp.getWritePointer(channel);
+    for (int sample = 0; sample < temp.getNumSamples(); ++sample)
     {
-        outputing_stage = (outputing_stage + 1) % 16;
+        if (instences[outputing_stage] == 1)
+        {
+            //setPannerValue(m_pan_dials[outputing_stage]);
+            //processPan(temp);
+            channelData[sample] = temp.getSample(channel, sample) * juce::Decibels::decibelsToGain(vol_dials[outputing_stage]);
+        }
+        else
+        {
+            channelData[sample] = 0;
+        }
     }
-
-
-    /*
     if (delay_buffer_length > buffer_length + read_position)
     {
-        buffer.addFrom(channel, 0, delay_buffer_data + read_position, buffer_length);
+        buffer.addFrom(channel, 0, temp.getReadPointer(channel) + read_position, buffer_length);
     }
     else
     {
         const int buffer_remaining = delay_buffer_length - read_position;
+        const float* delay_buffer_data = temp.getReadPointer(channel);
         buffer.copyFrom(channel, 0, delay_buffer_data + read_position, buffer_remaining);
         buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
     }
-    */
+    time_strecher++;
+    if (channel == 1  &&  time_strecher == buffer_length/16)
+    {
+        outputing_stage = (outputing_stage + 1) % 16;
+        time_strecher = 0;
+    }
 }
 
-
+void MyDelay::feedbackDelay(int channel, const int buffer_length, float* dry_buffer)
+{
+    if (delay_buffer_length > buffer_length + write_position)
+    {
+        delay_buffer.addFromWithRamp(channel, write_position, dry_buffer, buffer_length, delay_mix, delay_mix);
+    }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - write_position;
+        delay_buffer.addFromWithRamp(channel, buffer_remaining, dry_buffer, buffer_remaining, delay_mix, delay_mix);
+        delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, delay_mix, delay_mix);
+    }
+}
 
 
 void MyDelay::addInstence(int instance_num)
