@@ -95,7 +95,8 @@ void MyDelay::setPannerValue(float current_pan)
 void MyDelay::processPan(AudioBuffer<float>& buffer_to_pan)
 {
     juce::dsp::AudioBlock<float> block(buffer_to_pan);
-    delay_panner.process(juce::dsp::ProcessContextReplacing(block));
+    juce::dsp::ProcessContextReplacing content(block);
+    delay_panner.process(content);
 }
 
 
@@ -137,15 +138,12 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
     */
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     AudioBuffer temp(delay_buffer);
-    //temp.applyGain(vol_dials[outputing_stage]);
     auto* channelData = temp.getWritePointer(channel);
     channelData = temp.getWritePointer(channel);
     for (int sample = 0; sample < temp.getNumSamples(); ++sample)
     {
         if (instences[outputing_stage] == 1)
         {
-            //setPannerValue(m_pan_dials[outputing_stage]);
-            //processPan(temp);
             channelData[sample] = temp.getSample(channel, sample) * juce::Decibels::decibelsToGain(vol_dials[outputing_stage]);
         }
         else
@@ -153,6 +151,8 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
             channelData[sample] = 0;
         }
     }
+    setPannerValue(m_pan_dials[outputing_stage]);
+    processPan(temp);
     if (delay_buffer_length > buffer_length + read_position)
     {
         buffer.addFrom(channel, 0, temp.getReadPointer(channel) + read_position, buffer_length);
