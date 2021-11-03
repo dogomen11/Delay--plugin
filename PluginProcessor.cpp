@@ -221,14 +221,14 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         {
             fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_mix);
             getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
-            //feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_mix);
+            feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_mix);
         }
         else
         {
             //buffer.makeCopyOf(m_reverb.addReverb());
             current_delay.fillDelayBuffer(channel, buffer_length, buffer_data);
             current_delay.getFromDelayBuffer(buffer, channel, buffer_length,dry_buffer, m_volume_dials, m_pan_dials);
-            //current_delay.feedbackDelay(channel, buffer_length, dry_buffer);
+            current_delay.feedbackDelay(channel, buffer_length, dry_buffer);
         }
     }
 

@@ -136,11 +136,11 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
 
     buffer.addFrom(channel, 0, instence_to_copy, buffer_length);
     */
-    feedbackDelay(channel, buffer_length, dry_buffer);
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     AudioBuffer temp(delay_buffer);
     auto* channelData = temp.getWritePointer(channel);
     channelData = temp.getWritePointer(channel);
+    feedbackDelay(channel, buffer_length, dry_buffer);
     for (int sample = 0; sample < temp.getNumSamples(); ++sample)
     {
         if (instences[outputing_stage] == 1)
@@ -149,7 +149,9 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
         }
         else
         {
-            temp.clear();
+            //temp.clear();
+            int debug = instences[outputing_stage];
+            channelData[sample] = temp.getSample(channel, sample) * 0;
         }
     }
     setPannerValue(m_pan_dials[outputing_stage]);
@@ -166,10 +168,11 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
         buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
     }
     time_strecher++;
-    if (channel == 1  &&  time_strecher == sample_rate)
+    if (channel == 1  &&  time_strecher == (sqrtf(sample_rate)) )
     {
         outputing_stage = (outputing_stage + 1) % 16;
         time_strecher = 0;
+
     }
 }
 
