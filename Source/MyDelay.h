@@ -46,9 +46,6 @@ public:
     void setDelayTime(int delay_time_chosen);
     void setInputGain(float in_gain_chosen);
     void setOutputGain(float out_gain_chosen);
-    void setPannerSpec(dsp::ProcessSpec new_spec);
-    void setPannerValue(float current_pan);
-    void processPan(AudioBuffer<float>& buffer_to_pan);
 
     void setInputBuffer(AudioBuffer <float>& new_buffer);
 

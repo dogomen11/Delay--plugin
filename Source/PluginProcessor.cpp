@@ -127,7 +127,6 @@ void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
 
-    current_delay.setPannerSpec(spec);
     updateParameters();
     m_visualiser.clear();
 
@@ -214,8 +213,8 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         float* dry_buffer = buffer.getWritePointer(channel);
         marked = current_delay.isMarked();
         // reverb need to work! TODO
-        m_reverb.setInputBuffer(buffer);
-        m_reverb.setupMyReverb();
+        //m_reverb.setInputBuffer(buffer);
+        //m_reverb.setupMyReverb();
 
         if (marked == 0)
         {
@@ -225,10 +224,8 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         }
         else
         {
-            //buffer.makeCopyOf(m_reverb.addReverb());
             current_delay.fillDelayBuffer(channel, buffer_length, buffer_data);
             current_delay.getFromDelayBuffer(buffer, channel, buffer_length, dry_buffer, m_volume_dials, m_pan_dials);
-            //current_delay.feedbackDelay(channel, buffer_length, dry_buffer);
         }
     }
 
@@ -245,16 +242,6 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         }
     }
 
-
-    /*
-    dsp::AudioBlock<float> block(buffer);
-    for (int i = 0; i < 16; i++)
-    {
-        m_delay_panner[i].process(ProcessContextReplacing<float>(block));
-        //m_reverb.setEnabled(true);
-        //m_reverb.process(ProcessContextReplacing<float>(block));
-    }
-    */
     m_write_position += buffer_length;
     m_write_position %= delay_buffer_length;
 
