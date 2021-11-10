@@ -226,6 +226,7 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         {
             current_delay.fillDelayBuffer(channel, buffer_length, buffer_data);
             current_delay.getFromDelayBuffer(buffer, channel, buffer_length, dry_buffer, m_volume_dials, m_pan_dials);
+            current_delay.feedbackDelay(channel, buffer_length, dry_buffer);
         }
     }
 

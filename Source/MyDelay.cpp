@@ -112,7 +112,7 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float*
 
 void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, float* dry_buffer, float vol_dials[], float m_pan_dials[])
 {
-    feedbackDelay(channel, buffer_length, dry_buffer);
+    //feedbackDelay(channel, buffer_length, dry_buffer);
     AudioBuffer temp(delay_buffer);
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     auto* channelData = temp.getWritePointer(channel);
