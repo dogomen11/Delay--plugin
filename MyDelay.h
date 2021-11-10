@@ -32,10 +32,11 @@ private:
     float input_gain;
     float output_gain;
     AudioBuffer<float> delay_buffer;
+    AudioBuffer<float> feedback_buffer;
     int delay_buffer_length = 0;
     int outputing_stage = 0;
     int time_strecher = 0;
-    juce::dsp::Panner<float> delay_panner;
+
 
 public:
 
@@ -46,9 +47,6 @@ public:
     void setDelayTime(int delay_time_chosen);
     void setInputGain(float in_gain_chosen);
     void setOutputGain(float out_gain_chosen);
-    void setPannerSpec(dsp::ProcessSpec new_spec);
-    void setPannerValue(float current_pan);
-    void processPan(AudioBuffer<float>& buffer_to_pan);
 
     void setInputBuffer(AudioBuffer <float>& new_buffer);
 
