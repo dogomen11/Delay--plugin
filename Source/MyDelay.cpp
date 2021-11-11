@@ -116,35 +116,8 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
     AudioBuffer temp(delay_buffer);
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     auto* channelData = temp.getWritePointer(channel);
-    channelData = temp.getWritePointer(channel);
-    float debug_3 = m_pan_dials[outputing_stage];
-    float debug_4_pan_mult = 1;
-    if (debug_3 != 0)
-    {
-        debug_4_pan_mult = calculatePanMargin(debug_3, channel);
-    }
-    for (int sample = 0; sample < temp.getNumSamples(); ++sample)
-    {
-        if (instences[outputing_stage] == 1)
-        {
-            channelData[sample] = temp.getSample(channel, sample) * vol_dials[outputing_stage] * debug_4_pan_mult;
-        }
-        else
-        {
-            channelData[sample] = temp.getSample(channel, sample) * 0;
-        }
-    }
-    if (delay_buffer_length > buffer_length + read_position)
-    {
-        buffer.addFrom(channel, 0, temp.getReadPointer(channel) + read_position, buffer_length);
-    }
-    else
-    {
-        const int buffer_remaining = delay_buffer_length - read_position;
-        const float* delay_buffer_data = temp.getReadPointer(channel);
-        buffer.copyFrom(channel, 0, delay_buffer_data + read_position, buffer_remaining);
-        buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
-    }
+    applyPanAndVol(temp, instences[outputing_stage], channelData, channel, vol_dials[outputing_stage], m_pan_dials[outputing_stage]);
+    addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
     time_strecher++;
     float debug_2 = sample_rate/512;     //TODO change time strech formula
     if (channel == 1  &&  time_strecher >= debug_2 )
@@ -188,7 +161,27 @@ int MyDelay::isMarked()
     return marked_instences;
 }
 
-static float calculatePanMargin(float debug_3, int channel)
+void MyDelay::applyPanAndVol(AudioBuffer<float>& temp, bool instence, float* channelData, int channel, float volume, float pan)
+{
+    float pan_mult = 1;
+    if (pan != 0)
+    {
+        pan_mult = calculatePanMargin(pan, channel);
+    }
+    for (int sample = 0; sample < temp.getNumSamples(); ++sample)
+    {
+        if (instence == 1)
+        {
+            channelData[sample] = temp.getSample(channel, sample) * volume * pan_mult;
+        }
+        else
+        {
+            channelData[sample] = temp.getSample(channel, sample) * 0;
+        }
+    }
+}
+
+float MyDelay::calculatePanMargin(float debug_3, int channel)
 {
     if (channel == 0)
     {
@@ -213,4 +206,19 @@ static float calculatePanMargin(float debug_3, int channel)
         }
     }
     return 1;
+}
+
+void MyDelay::addDelayinstenceToBuffer(AudioBuffer<float>& buffer, AudioBuffer<float>& temp, int channel, int buffer_length, const int read_position)
+{
+    if (delay_buffer_length > buffer_length + read_position)
+    {
+        buffer.addFrom(channel, 0, temp.getReadPointer(channel) + read_position, buffer_length);
+    }
+    else
+    {
+        const int buffer_remaining = delay_buffer_length - read_position;
+        const float* delay_buffer_data = temp.getReadPointer(channel);
+        buffer.copyFrom(channel, 0, delay_buffer_data + read_position, buffer_remaining);
+        buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
+    }
 }
