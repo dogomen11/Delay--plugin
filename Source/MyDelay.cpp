@@ -11,7 +11,7 @@
 #include "MyDelay.h"
 
 #define PI 3.141
-static float calculatePanMargin(float debug_3, int channel);
+static float calculatePanMargin(float pan, int channel);
 
 MyDelay::MyDelay() : write_position(0.0),
                     marked_instences(0),
@@ -87,16 +87,6 @@ const float* MyDelay::getReadPointer(int channelNumber)
 
 void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float* buffer_data)
 {
-    /*
-    for (int i = 0; i < NUM_OF_INSTENCES; i++)
-    {
-        delay_buffer.copyFromWithRamp(channel, (i * buffer_length), buffer_data, buffer_length, input_gain, output_gain);
-        auto* channelData = delay_buffer.getWritePointer(channel);
-        for (int sample = 0; sample < buffer_length; ++sample)
-        {
-            channelData[sample] = delay_buffer.getSample(channel, sample) * juce::Decibels::decibelsToGain(instences_volume[i]);
-        }
-    }*/
     if (delay_buffer_length > buffer_length + write_position)
     {
         delay_buffer.copyFromWithRamp(channel, write_position, buffer_data, buffer_length, delay_mix, delay_mix);
@@ -112,32 +102,35 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float*
 
 void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, float* dry_buffer, float vol_dials[], float m_pan_dials[])
 {
-    //feedbackDelay(channel, buffer_length, dry_buffer);
     AudioBuffer temp(delay_buffer);
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     auto* channelData = temp.getWritePointer(channel);
     applyPanAndVol(temp, instences[outputing_stage], channelData, channel, vol_dials[outputing_stage], m_pan_dials[outputing_stage]);
     addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
+    //TODO change time strech formula
     time_strecher++;
-    float debug_2 = sample_rate/512;     //TODO change time strech formula
+    float debug_2 = sample_rate/600;     
     if (channel == 1  &&  time_strecher >= debug_2 )
     {
         outputing_stage = (outputing_stage + 1) % 16;
         time_strecher = 0;
+        // debug the system timing
     }
+    //feedbackDelay(channel, buffer_length, dry_buffer);
 }
 
 void MyDelay::feedbackDelay(int channel, const int buffer_length, float* dry_buffer)
 {
+    float debug_1 = delay_mix * 0.5;
     if (delay_buffer_length > buffer_length + write_position)
     {
-        delay_buffer.addFromWithRamp(channel, write_position, dry_buffer, buffer_length, delay_mix, delay_mix);
+        delay_buffer.addFromWithRamp(channel, write_position, dry_buffer, buffer_length, debug_1, debug_1);
     }
     else
     {
         const int buffer_remaining = delay_buffer_length - write_position;
-        delay_buffer.addFromWithRamp(channel, buffer_remaining, dry_buffer, buffer_remaining, delay_mix, delay_mix);
-        delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, delay_mix, delay_mix);
+        delay_buffer.addFromWithRamp(channel, buffer_remaining, dry_buffer, buffer_remaining, debug_1, debug_1);
+        delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, debug_1, debug_1);
     }
 }
 
@@ -146,20 +139,15 @@ void MyDelay::addInstence(int instance_num)
 {
     marked_instences++;
     instences[instance_num] = 1;
-    //mark instens and make him play delayed sample
 }
 
 void MyDelay::decreseInstence(int instance_num)
 {
     marked_instences--;
     instences[instance_num] = 0;
-    //unmark instens and make him NOT play delayed sample 
 }
 
-int MyDelay::isMarked()
-{
-    return marked_instences;
-}
+int MyDelay::isMarked() { return marked_instences;}
 
 void MyDelay::applyPanAndVol(AudioBuffer<float>& temp, bool instence, float* channelData, int channel, float volume, float pan)
 {
@@ -181,28 +169,28 @@ void MyDelay::applyPanAndVol(AudioBuffer<float>& temp, bool instence, float* cha
     }
 }
 
-float MyDelay::calculatePanMargin(float debug_3, int channel)
+float MyDelay::calculatePanMargin(float pan, int channel)
 {
     if (channel == 0)
     {
-        if (debug_3 < 0)
+        if (pan < 0)
         {
             return 1;
         }
-        else if (debug_3 > 0)
+        else if (pan > 0)
         {
-            return 1 - square(debug_3);
+            return 1 - square(pan);
         }
     }
     else if (channel == 1)
     {
-        if (debug_3 > 0)
+        if (pan > 0)
         {
             return 1;
         }
-        else if (debug_3 < 0)
+        else if (pan < 0)
         {
-            return 1 - square(debug_3);
+            return 1 - square(pan);
         }
     }
     return 1;

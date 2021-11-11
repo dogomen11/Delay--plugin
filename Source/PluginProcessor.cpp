@@ -212,7 +212,7 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
         float* dry_buffer = buffer.getWritePointer(channel);
         marked = current_delay.isMarked();
-        // reverb need to work! TODO
+        //TODO make reverb work and array of it
         //m_reverb.setInputBuffer(buffer);
         //m_reverb.setupMyReverb();
 
@@ -229,7 +229,16 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
             current_delay.feedbackDelay(channel, buffer_length, dry_buffer);
         }
     }
-
+    /*
+    if (current_delay.debugReturnOutStage() % 2 == 0)
+    {
+        printf("TICK");
+    }
+    else
+    {
+        
+    }
+    */
     m_visualiser.pushBuffer(buffer);
 
     // output gain change

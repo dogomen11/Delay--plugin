@@ -88,7 +88,6 @@ public:
             setBufferSize(512);
             setSamplesPerBlock(64);
             setColours(Colours::black, Colours::darkred);
-
         }
     };
     Visualiser m_visualiser;
@@ -101,7 +100,7 @@ public:
     float m_volume_dials[NUM_OF_INSTENCES]{ 0.0f };
     float m_pan_dials[NUM_OF_INSTENCES]{ 0.0f };
     int marked = 0;
-    MyReverb m_reverb;                                                //maybe replace with vol_dials
+    MyReverb m_reverb;         //TODO need to make reverb instencess array
 
     void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
         const float* buffer_data, const float* delay_buffer_data, float m_delay_mix);
