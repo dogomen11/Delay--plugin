@@ -21,7 +21,6 @@ MyDelay::MyDelay() : write_position(0.0),
                     output_gain(1.0) 
 {
     delay_buffer.clear();
-    delay_panner.reset();
 }
 
 MyDelay::~MyDelay() {}
@@ -89,13 +88,14 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float*
 {
     if (delay_buffer_length > buffer_length + write_position)
     {
-        delay_buffer.copyFromWithRamp(channel, write_position, buffer_data, buffer_length, delay_mix, delay_mix);
+        //TODO changed copy to add ----> maybe crash! or worse clip
+        delay_buffer.addFromWithRamp(channel, write_position, buffer_data, buffer_length, delay_mix, delay_mix);
     }
     else
     {
         const int buffer_remaining = delay_buffer_length - write_position;
-        delay_buffer.copyFromWithRamp(channel, write_position, buffer_data, buffer_remaining, delay_mix, delay_mix);
-        delay_buffer.copyFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), delay_mix, delay_mix);
+        delay_buffer.addFromWithRamp(channel, write_position, buffer_data, buffer_remaining, delay_mix, delay_mix);
+        delay_buffer.addFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), delay_mix, delay_mix);
     }
 }
 
@@ -107,6 +107,7 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
     auto* channelData = temp.getWritePointer(channel);
     applyPanAndVol(temp, instences[outputing_stage], channelData, channel, vol_dials[outputing_stage], m_pan_dials[outputing_stage]);
     addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
+    feedbackDelay(channel, buffer_length, dry_buffer);
     //TODO change time strech formula
     time_strecher++;
     float debug_2 = sample_rate/600;     
@@ -116,12 +117,12 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
         time_strecher = 0;
         // debug the system timing
     }
-    //feedbackDelay(channel, buffer_length, dry_buffer);
+    
 }
 
 void MyDelay::feedbackDelay(int channel, const int buffer_length, float* dry_buffer)
 {
-    float debug_1 = delay_mix * 0.5;
+    float debug_1 = delay_mix * 0.6;       //TODO change debug to a reasonable value
     if (delay_buffer_length > buffer_length + write_position)
     {
         delay_buffer.addFromWithRamp(channel, write_position, dry_buffer, buffer_length, debug_1, debug_1);
@@ -160,6 +161,7 @@ void MyDelay::applyPanAndVol(AudioBuffer<float>& temp, bool instence, float* cha
     {
         if (instence == 1)
         {
+            jassert(pan_mult != 0);
             channelData[sample] = temp.getSample(channel, sample) * volume * pan_mult;
         }
         else

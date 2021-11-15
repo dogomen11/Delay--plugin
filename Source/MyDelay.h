@@ -35,7 +35,6 @@ private:
     int delay_buffer_length = 0;
     int outputing_stage = 0;
     int time_strecher = 0;
-    juce::dsp::Panner<float> delay_panner;
 
     float calculatePanMargin(float debug_3, int channel);
     void addDelayinstenceToBuffer(AudioBuffer<float>& buffer, AudioBuffer<float>&  temp, int channel, int buffer_lenth, const int read_position);
