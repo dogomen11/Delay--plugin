@@ -43,15 +43,17 @@ private:
     Slider m_volume_dials[NUM_OF_INSTENCES];
     Slider m_pan_dials[NUM_OF_INSTENCES];
     ToggleButton m_on_off_buttons[NUM_OF_INSTENCES];
+    ToggleButton m_reverb_buttons[NUM_OF_INSTENCES];
 
     juce::Label m_volume_dials_label;
     juce::Label m_pan_dials_label;
     juce::Label m_on_off_buttons_label;
+    juce::Label m_reverb_buttons_label;
 
     Slider m_delay_time;
     juce::Label m_delay_time_label;
-    Slider m_delay_mix;
-    juce::Label m_delay_mix_label;
+    Slider m_delay_feedback;
+    juce::Label m_delay_feedback_label;
 
     ImageComponent m_background;
 

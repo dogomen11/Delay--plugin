@@ -52,7 +52,7 @@ public:
 
     void setInputBuffer(AudioBuffer <float>& new_buffer);
 
-    void updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], float m_delay_mix, int m_delay_time);
+    void updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], float m_delay_feedback, int m_delay_time);
     void setSize(int new_num_channels, int new_num_samples);
     int getNumSamples();
     const float* getReadPointer(int channelNumber);

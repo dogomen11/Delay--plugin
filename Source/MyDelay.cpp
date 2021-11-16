@@ -56,11 +56,11 @@ void MyDelay::setSize(int new_num_channels, int new_num_samples)
     delay_buffer_length = delay_buffer.getNumSamples();
 }
 
-void MyDelay::updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], float m_delay_mix, int m_delay_time)
+void MyDelay::updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], float m_delay_feedback, int m_delay_time)
 {
     write_position = m_write_position;
     sample_rate = m_sample_rate;
-    delay_mix = m_delay_mix;
+    delay_mix = m_delay_feedback;
     delay_time = m_delay_time;
     marked_instences = 0;
     for (int i = 0; i < NUM_OF_INSTENCES; i++)
@@ -111,8 +111,8 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
     AudioBuffer temp(delay_buffer);
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     auto* channelData = temp.getWritePointer(channel);
-    //applyPanAndVol(temp, instences[outputing_stage], channelData, channel, vol_dials[outputing_stage], m_pan_dials[outputing_stage]);
-    //addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
+    applyPanAndVol(temp, instences[outputing_stage], channelData, channel, vol_dials[outputing_stage], m_pan_dials[outputing_stage]);
+    addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
     //feedbackDelay(channel, buffer_length, dry_buffer);
     //TODO change time strech formula
     time_strecher++;

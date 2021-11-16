@@ -26,9 +26,9 @@ void NewProjectAudioProcessorEditor::sliderValueChanged(juce::Slider* slider)
     {
         audioProcessor.m_delay_time = m_delay_time.getValue();
     }
-    else if (slider == &m_delay_mix)
+    else if (slider == &m_delay_feedback)
     {
-        audioProcessor.m_delay_mix = m_delay_mix.getValue();
+        audioProcessor.m_delay_feedback = m_delay_feedback.getValue();
     }
     else
     {
@@ -64,6 +64,10 @@ void NewProjectAudioProcessorEditor::buttonClicked(Button* button)
                 break;
             }
         }
+        else if (button == &m_reverb_buttons[i])
+        {
+            audioProcessor.m_reverb_button_array[i] = m_reverb_buttons[i].getToggleState();
+        }
     }
     reAlphaComponents();
 
@@ -77,11 +81,15 @@ void NewProjectAudioProcessorEditor::reAlphaComponents()
         {
             m_volume_dials[i].setAlpha(TRANSPARENT);
             m_pan_dials[i].setAlpha(TRANSPARENT);
+            m_on_off_buttons[i].setAlpha(TRANSPARENT);
+            m_reverb_buttons[i].setAlpha(TRANSPARENT);
         }
         else
         {
             m_volume_dials[i].setAlpha(BOLD);
             m_pan_dials[i].setAlpha(BOLD);
+            m_on_off_buttons[i].setAlpha(BOLD);
+            m_reverb_buttons[i].setAlpha(BOLD);
         }
     }
 }
@@ -91,10 +99,10 @@ NewProjectAudioProcessorEditor::NewProjectAudioProcessorEditor(NewProjectAudioPr
     : AudioProcessorEditor(&p), audioProcessor(p)
 {
     setSize(1200, 800);
-
-    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, INPUT_GAIN_ID, m_input_gain);
-    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, DELAY_MIX_ID, m_delay_mix);
-    slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, OUTPUT_GAIN_ID, m_output_gain);
+    //TODO: check if need to change to use valueTree
+    //slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, INPUT_GAIN_ID, m_input_gain);
+    //slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, DELAY_MIX_ID, m_delay_feedback);
+    //slider_attach = new juce::AudioProcessorValueTreeState::SliderAttachment(audioProcessor.parameters, OUTPUT_GAIN_ID, m_output_gain);
     initiateComponents(p);
 
 }
@@ -113,6 +121,8 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
     m_pan_dials_label.setText("pan", juce::dontSendNotification);
     addAndMakeVisible(m_on_off_buttons_label);
     m_on_off_buttons_label.setText("on/off", juce::dontSendNotification);
+    addAndMakeVisible(this->audioProcessor.m_visualiser);
+    m_reverb_buttons_label.setText("reverb", juce::dontSendNotification);
     addAndMakeVisible(this->audioProcessor.m_visualiser);
 
     addAndMakeVisible(m_background);
@@ -149,15 +159,15 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
     addAndMakeVisible(m_delay_time_label);
     m_delay_time_label.setText("time", juce::dontSendNotification);
 
-    addAndMakeVisible(m_delay_mix);
-    m_delay_mix.setRange(0.0f, 0.8f, 0.01f);
-    m_delay_mix.setValue(0.4f);
-    m_delay_mix.setTextValueSuffix("%");
-    m_delay_mix.setTextBoxStyle(Slider::TextBoxBelow, true, 50, 20);
-    m_delay_mix.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
-    m_delay_mix.addListener(this);
-    addAndMakeVisible(m_delay_mix_label);
-    m_delay_mix_label.setText("mix", juce::dontSendNotification);
+    addAndMakeVisible(m_delay_feedback);
+    m_delay_feedback.setRange(0.0f, 0.8f, 0.01f);
+    m_delay_feedback.setValue(0.4f);
+    m_delay_feedback.setTextValueSuffix("%");
+    m_delay_feedback.setTextBoxStyle(Slider::TextBoxBelow, true, 50, 20);
+    m_delay_feedback.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
+    m_delay_feedback.addListener(this);
+    addAndMakeVisible(m_delay_feedback_label);
+    m_delay_feedback_label.setText("feedback", juce::dontSendNotification);
     //*****************************************************************************
 
     for (int i = 0; i < 16; i++)
@@ -182,6 +192,9 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
 
         addAndMakeVisible(m_on_off_buttons[i]);
         m_on_off_buttons[i].addListener(this);
+
+        addAndMakeVisible(m_reverb_buttons[i]);
+        m_reverb_buttons[i].addListener(this);
     }
 
 
@@ -194,7 +207,6 @@ void NewProjectAudioProcessorEditor::printComponents()
     int dials_distance_from_edeg = 68;
     int size_of_dial = 62;
 
-    //m_background.setBounds(0, 0, 1200, 800);
 
     m_input_gain.setBounds(13, 5, 80, 80);
     m_input_gain_label.setBounds(30, 70, 80, 50);
@@ -203,16 +215,18 @@ void NewProjectAudioProcessorEditor::printComponents()
     m_pan_dials_label.setBounds(15, 510, 80, 50);
     m_volume_dials_label.setBounds(15, 580, 80, 50);
     m_on_off_buttons_label.setBounds(15, 650, 80, 50);
+    m_reverb_buttons_label.setBounds(15, 700, 80, 50);
     m_delay_time.setBounds(200, 710, 90, 90);
     m_delay_time_label.setBounds(120, 735, 90, 30);
-    m_delay_mix.setBounds(400, 710, 90, 90);
-    m_delay_mix_label.setBounds(320, 735, 90, 30);
+    m_delay_feedback.setBounds(400, 710, 90, 90);
+    m_delay_feedback_label.setBounds(320, 735, 90, 30);
     this->audioProcessor.m_visualiser.setBounds(110, 60, 980, 400);
     for (int i = 0; i < 16; i++)
     {
         m_volume_dials[i].setBounds(dials_distance_from_edeg + (dials_horizontal_distance * i), 580, size_of_dial, size_of_dial);
         m_pan_dials[i].setBounds(dials_distance_from_edeg + (dials_horizontal_distance * i), 510, size_of_dial, size_of_dial);
         m_on_off_buttons[i].setBounds(16 + dials_distance_from_edeg + dials_horizontal_distance * i, 650, size_of_dial, size_of_dial);
+        m_reverb_buttons[i].setBounds(16 + dials_distance_from_edeg + dials_horizontal_distance * i, 700, size_of_dial, size_of_dial);
     }
 
 }

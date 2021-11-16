@@ -33,8 +33,8 @@ NewProjectAudioProcessor::NewProjectAudioProcessor()
     parameters.createAndAddParameter(INPUT_GAIN_ID, INPUT_GAIN_NAME, INPUT_GAIN_NAME, m_input_gain_range, 0.0f, nullptr, nullptr);
     NormalisableRange<float> m_output_gain_range(-60.0f, 12.0f, 0.01f);
     parameters.createAndAddParameter(OUTPUT_GAIN_ID, OUTPUT_GAIN_NAME, OUTPUT_GAIN_NAME, m_output_gain_range, 0.0f, nullptr, nullptr);
-    NormalisableRange<float> m_delay_mix__range(0.0f, 1.0f, 0.01f);
-    parameters.createAndAddParameter(DELAY_MIX_ID, DELAY_MIX_NAME, DELAY_MIX_NAME, m_delay_mix__range, 0.5f, nullptr, nullptr);
+    NormalisableRange<float> m_delay_feedback__range(0.0f, 1.0f, 0.01f);
+    parameters.createAndAddParameter(DELAY_MIX_ID, DELAY_MIX_NAME, DELAY_MIX_NAME, m_delay_feedback__range, 0.5f, nullptr, nullptr);
 
     parameters.state = juce::ValueTree("saved_parameters");
 
@@ -120,7 +120,7 @@ void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
 
     previous_gain = pow(10, *parameters.getRawParameterValue(INPUT_GAIN_ID) / 20);
     m_output_gain = pow(10, *parameters.getRawParameterValue(OUTPUT_GAIN_ID) / 20);
-    m_delay_mix = *parameters.getRawParameterValue(DELAY_MIX_ID);
+    m_delay_feedback = *parameters.getRawParameterValue(DELAY_MIX_ID);
 
     dsp::ProcessSpec spec;
     spec.sampleRate = last_sample_rate;
@@ -194,7 +194,7 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     }
 
 
-    current_delay.updateArgs(m_write_position, m_sample_rate, m_on_off_button_array, m_delay_mix, m_delay_time);
+    current_delay.updateArgs(m_write_position, m_sample_rate, m_on_off_button_array, m_delay_feedback, m_delay_time);
     const int buffer_length = buffer.getNumSamples();
     const int delay_buffer_length = m_delay_buffer.getNumSamples();
 
@@ -218,9 +218,9 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 
         if (marked == 0)
         {
-            fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_mix);
+            fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_feedback);
             getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
-            //feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_mix);
+            //feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_feedback);
         }
         else
         {
@@ -260,17 +260,17 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
 
 //copy from buffer to delay_buffer
 void NewProjectAudioProcessor::fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
-                                                const float* buffer_data, const float* delay_buffer_data, float m_delay_mix)
+                                                const float* buffer_data, const float* delay_buffer_data, float m_delay_feedback)
 {
     if (delay_buffer_length > buffer_length + m_write_position)
     {
-        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_length, m_delay_mix, m_delay_mix);
+        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_length, m_delay_feedback, m_delay_feedback);
     }
     else
     {
         const int buffer_remaining = delay_buffer_length - m_write_position;
-        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_remaining, m_delay_mix, m_delay_mix);
-        m_delay_buffer.copyFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), m_delay_mix, m_delay_mix);
+        m_delay_buffer.copyFromWithRamp(channel, m_write_position, buffer_data, buffer_remaining, m_delay_feedback, m_delay_feedback);
+        m_delay_buffer.copyFromWithRamp(channel, 0, buffer_data, (buffer_length - buffer_remaining), m_delay_feedback, m_delay_feedback);
     }
 }
 
@@ -299,17 +299,17 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
 
 
 void NewProjectAudioProcessor::feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
-    float* dry_buffer, float m_delay_mix)
+    float* dry_buffer, float m_delay_feedback)
 {
     if (delay_buffer_length > buffer_length + m_write_position)
     {
-        m_delay_buffer.addFromWithRamp(channel, m_write_position, dry_buffer, buffer_length, m_delay_mix, m_delay_mix);
+        m_delay_buffer.addFromWithRamp(channel, m_write_position, dry_buffer, buffer_length, m_delay_feedback, m_delay_feedback);
     }
     else
     {
         const int buffer_remaining = delay_buffer_length - m_write_position;
-        m_delay_buffer.addFromWithRamp(channel, buffer_remaining, dry_buffer, buffer_remaining, m_delay_mix, m_delay_mix);
-        m_delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, m_delay_mix, m_delay_mix);
+        m_delay_buffer.addFromWithRamp(channel, buffer_remaining, dry_buffer, buffer_remaining, m_delay_feedback, m_delay_feedback);
+        m_delay_buffer.addFromWithRamp(channel, 0, dry_buffer, buffer_length - buffer_remaining, m_delay_feedback, m_delay_feedback);
     }
 }
 
