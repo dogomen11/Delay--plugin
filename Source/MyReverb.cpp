@@ -105,7 +105,7 @@ void MyReverb::setInputBuffer(AudioBuffer <float>& new_buffer)
 
 void MyReverb::setupMyReverb()
 {
-	int new_num_samples = input_buffer_size + int(44100.0 * time_current_value) + int(std::ceil(44.1 * init_current_value)) + 11025;
+	int new_num_samples = input_buffer_size + int(48000.0 * time_current_value) + int(std::ceil(48.0 * init_current_value)) + 11025;
 	output_buffer.setSize(input_buffer.getNumChannels(), new_num_samples, false, true, false);
 	input_buffer.setSize(input_buffer.getNumChannels(), output_buffer.getNumSamples(), true, true, false);
 
@@ -130,7 +130,7 @@ void MyReverb::setupMyReverb()
 	tonal_correction_filter_ptr.clear();
 	tonal_correction_filter_coeffs_ptr.reset();
 
-	float min_alpha_const = (4.0 * time_current_value) / (-3.0 * 4999.0 * (1.0 / 44100.0) * std::log(10.0));
+	float min_alpha_const = (4.0 * time_current_value) / (-3.0 * 4999.0 * (1.0 / 48000.0) * std::log(10.0));
 	float min_alpha = std::sqrt(1.0 / (1.0 - min_alpha_const));
 	float alpha = min_alpha + ((100.0 - dampening_current_value) * ((1.0 - min_alpha) / 100.0));
 
@@ -141,7 +141,7 @@ void MyReverb::setupMyReverb()
 
 	for (int counter = 0; counter < 12; ++counter)
 	{
-		g_coeff = std::pow(10.0, (-3.0 * delay_line_lengths[counter] * (1.0 / 44100.0)) / time_current_value);
+		g_coeff = std::pow(10.0, (-3.0 * delay_line_lengths[counter] * (1.0 / 48000.0)) / time_current_value);
 		p_coeff = const_element1 * const_element2 * std::log10(g_coeff);
 		dampening_filters_coeffs_tab.add(new dsp::IIR::Coefficients <float>(g_coeff * (1.0 - p_coeff), 0.0, 1.0, -p_coeff));
 		dampening_filters_tab.add(new dsp::IIR::Filter <float>(dampening_filters_coeffs_tab.getLast()));
@@ -154,14 +154,14 @@ void MyReverb::setupMyReverb()
 	is_clipping = false;
 }
 
-AudioBuffer <float>& MyReverb::addReverb()
+AudioBuffer <float>& MyReverb::addReverb(int channel)
 {
 	ScopedNoDenormals noDenormals;
 
 	int init_delay_line_length = 1;
 
 	if (init_current_value != 0.0)
-		init_delay_line_length = int(std::round(init_current_value * 44.1));
+		init_delay_line_length = int(std::round(init_current_value * 48.0));
 
 	std::deque <float> init_delay_line(init_delay_line_length, 0.0);
 	OwnedArray <std::deque <float>> delay_lines;
@@ -175,8 +175,7 @@ AudioBuffer <float>& MyReverb::addReverb()
 		delay_lines.add(new std::deque <float>(4999, 0.0));
 	}
 
-	for (auto channel = 0; channel < input_buffer.getNumChannels(); ++channel)
-	{
+	
 		float* output_write = output_buffer.getWritePointer(channel);
 		const float* input_read = input_buffer.getReadPointer(channel);
 
@@ -205,7 +204,6 @@ AudioBuffer <float>& MyReverb::addReverb()
 				if (output_write[sample] > 1.0 || output_write[sample] < -1.0)
 					is_clipping = true;
 			}
-		}
 
 		for (int counter = 0; counter < 12; ++counter)
 			dampening_filters_tab[counter]->reset();

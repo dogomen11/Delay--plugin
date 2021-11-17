@@ -73,7 +73,7 @@ public:
 	void setInputBuffer(AudioBuffer <float>& new_buffer);
 
 	void setupMyReverb();
-	AudioBuffer <float>& addReverb();
+	AudioBuffer <float>& addReverb(int channel);
 
 
 };

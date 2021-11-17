@@ -114,13 +114,13 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     auto* channelData = temp.getWritePointer(channel);
     applyFX(temp, instences[outputing_stage], channelData, channel, vol_dials[outputing_stage], m_pan_dials[outputing_stage]);
-    addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
     if (reverb_instences[outputing_stage] == true)
     {
         //TODO: make the reverb work
-        delay_reverb.setupMyReverb();
-        delay_reverb.addReverb();
+        //delay_reverb.setupMyReverb();
+        //temp = delay_reverb.addReverb(channel);
     }
+    addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
     //feedbackDelay(channel, buffer_length, dry_buffer);  //TODO: check if feedback before reverb and fX?? relevant??
     //TODO change time strech formula
     time_strecher++;
