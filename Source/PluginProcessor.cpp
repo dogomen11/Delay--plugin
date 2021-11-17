@@ -194,7 +194,7 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     }
 
 
-    current_delay.updateArgs(m_write_position, m_sample_rate, m_on_off_button_array, m_delay_feedback, m_delay_time);
+    current_delay.updateArgs(m_write_position, m_sample_rate, m_on_off_button_array, m_reverb_button_array, m_delay_feedback, m_delay_time);
     const int buffer_length = buffer.getNumSamples();
     const int delay_buffer_length = m_delay_buffer.getNumSamples();
 

@@ -121,7 +121,7 @@ void NewProjectAudioProcessorEditor::initiateComponents(NewProjectAudioProcessor
     m_pan_dials_label.setText("pan", juce::dontSendNotification);
     addAndMakeVisible(m_on_off_buttons_label);
     m_on_off_buttons_label.setText("on/off", juce::dontSendNotification);
-    addAndMakeVisible(this->audioProcessor.m_visualiser);
+    addAndMakeVisible(m_reverb_buttons_label);
     m_reverb_buttons_label.setText("reverb", juce::dontSendNotification);
     addAndMakeVisible(this->audioProcessor.m_visualiser);
 

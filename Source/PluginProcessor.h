@@ -101,7 +101,6 @@ public:
     float m_pan_dials[NUM_OF_INSTENCES]{ 0.0f };
     bool m_reverb_button_array[NUM_OF_INSTENCES]{ false };
     int marked = 0;
-    MyReverb m_reverb;         //TODO need to make reverb instencess array
 
     void fillDelayBuffer(int channel, const int buffer_length, const int delay_buffer_length,
         const float* buffer_data, const float* delay_buffer_data, float m_delay_feedback);

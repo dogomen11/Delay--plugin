@@ -11,6 +11,8 @@
 #define MYDELAY
 #pragma once
 #include <JuceHeader.h>
+#include "MyReverb.h"
+
 using namespace juce;
 
 #define NUM_OF_INSTENCES 16
@@ -25,20 +27,22 @@ private:
 
     int write_position;
     int sample_rate;
-    int instences[NUM_OF_INSTENCES] = {};
+    bool instences[NUM_OF_INSTENCES] = {};
+    bool reverb_instences[NUM_OF_INSTENCES] = {};
     int marked_instences;
     float delay_mix;
     int delay_time;
     float input_gain;
     float output_gain;
     AudioBuffer<float> delay_buffer;
+    MyReverb delay_reverb;
     int delay_buffer_length = 0;
     int outputing_stage = 0;
     int time_strecher = 0;
 
     float calculatePanMargin(float debug_3, int channel);
     void addDelayinstenceToBuffer(AudioBuffer<float>& buffer, AudioBuffer<float>&  temp, int channel, int buffer_lenth, const int read_position);
-    void applyPanAndVol(AudioBuffer<float>& temp, bool instence, float* channelData, int channel, float volume, float pan);
+    void applyFX(AudioBuffer<float>& temp, bool instence, float* channelData, int channel, float volume, float pan);
 
 public:
 
@@ -52,7 +56,7 @@ public:
 
     void setInputBuffer(AudioBuffer <float>& new_buffer);
 
-    void updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], float m_delay_feedback, int m_delay_time);
+    void updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], bool m_reverb_array[], float m_delay_feedback, int m_delay_time);
     void setSize(int new_num_channels, int new_num_samples);
     int getNumSamples();
     const float* getReadPointer(int channelNumber);

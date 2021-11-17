@@ -20,7 +20,7 @@ MyDelay::MyDelay() : write_position(0.0),
                     input_gain(1.0),
                     output_gain(1.0) 
 {
-    delay_buffer.clear();
+   delay_buffer.clear();
 }
 
 MyDelay::~MyDelay() {}
@@ -56,7 +56,7 @@ void MyDelay::setSize(int new_num_channels, int new_num_samples)
     delay_buffer_length = delay_buffer.getNumSamples();
 }
 
-void MyDelay::updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], float m_delay_feedback, int m_delay_time)
+void MyDelay::updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_button_array[], bool m_reverb_array[], float m_delay_feedback, int m_delay_time)
 {
     write_position = m_write_position;
     sample_rate = m_sample_rate;
@@ -70,6 +70,7 @@ void MyDelay::updateArgs(int m_write_position, int m_sample_rate, bool m_on_off_
         {
             marked_instences++;
         }
+        reverb_instences[i] = m_reverb_array[i];
     }
 }
 
@@ -109,11 +110,18 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float*
 void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, float* dry_buffer, float vol_dials[], float m_pan_dials[])
 {
     AudioBuffer temp(delay_buffer);
+    delay_reverb.setInputBuffer(temp);     //TODO: check if need to set input buffer after FX
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     auto* channelData = temp.getWritePointer(channel);
-    applyPanAndVol(temp, instences[outputing_stage], channelData, channel, vol_dials[outputing_stage], m_pan_dials[outputing_stage]);
+    applyFX(temp, instences[outputing_stage], channelData, channel, vol_dials[outputing_stage], m_pan_dials[outputing_stage]);
     addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
-    //feedbackDelay(channel, buffer_length, dry_buffer);
+    if (reverb_instences[outputing_stage] == true)
+    {
+        //TODO: make the reverb work
+        delay_reverb.setupMyReverb();
+        delay_reverb.addReverb();
+    }
+    //feedbackDelay(channel, buffer_length, dry_buffer);  //TODO: check if feedback before reverb and fX?? relevant??
     //TODO change time strech formula
     time_strecher++;
     float debug_2 = sample_rate/600;     
@@ -121,7 +129,6 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
     {
         outputing_stage = (outputing_stage + 1) % 16;
         time_strecher = 0;
-        // debug the system timing
     }
     
 }
@@ -156,7 +163,7 @@ void MyDelay::decreseInstence(int instance_num)
 
 int MyDelay::isMarked() { return marked_instences;}
 
-void MyDelay::applyPanAndVol(AudioBuffer<float>& temp, bool instence, float* channelData, int channel, float volume, float pan)
+void MyDelay::applyFX(AudioBuffer<float>& temp, bool instence, float* channelData, int channel, float volume, float pan)
 {
     float pan_mult = 1;
     if (pan != 0)
