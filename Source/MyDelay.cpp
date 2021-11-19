@@ -119,6 +119,13 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
         //TODO: make the reverb work
         //delay_reverb.setupMyReverb();
         //temp = delay_reverb.addReverb(channel);
+        debug_4.setEnabled(true);
+        dsp::AudioBlock<float> block(temp);
+        debug_4.process(dsp::ProcessContextReplacing<float>(block));
+    }
+    else
+    {
+        debug_4.setEnabled(false);
     }
     addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
     //feedbackDelay(channel, buffer_length, dry_buffer);  //TODO: check if feedback before reverb and fX?? relevant??

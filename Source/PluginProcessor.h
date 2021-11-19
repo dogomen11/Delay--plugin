@@ -76,8 +76,9 @@ public:
     float m_delay_feedback = 0.4f;
     float previous_gain;
 
-    void process(dsp::ProcessContextReplacing<float> context);
-    void updateParameters();
+    // TODO : move param to stateValueTree
+    //void process(dsp::ProcessContextReplacing<float> context);
+    //void updateParameters();
     juce::AudioProcessorValueTreeState parameters;
 
     class Visualiser : public AudioVisualiserComponent

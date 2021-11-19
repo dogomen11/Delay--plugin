@@ -126,8 +126,11 @@ void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     spec.sampleRate = last_sample_rate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
+    current_delay.debug_4.reset();
+    current_delay.debug_4.prepare(spec);
 
-    updateParameters();
+
+    //updateParameters();
     m_visualiser.clear();
 
 }
@@ -161,15 +164,6 @@ bool NewProjectAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts
 #endif
 
 //================================================================================================================================
-void NewProjectAudioProcessor::updateParameters()
-{
-
-}
-
-void NewProjectAudioProcessor::process(dsp::ProcessContextReplacing<float> context)
-{
-
-}
 
 //================================================================================================================================
 void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -212,10 +206,6 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         const float* delay_buffer_data = m_delay_buffer.getReadPointer(channel);
         float* dry_buffer = buffer.getWritePointer(channel);
         marked = current_delay.isMarked();
-        //TODO make reverb work and array of it
-        //m_reverb.setInputBuffer(buffer);
-        //m_reverb.setupMyReverb();
-
         if (marked == 0)
         {
             fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_feedback);
@@ -274,10 +264,6 @@ void NewProjectAudioProcessor::fillDelayBuffer(int channel, const int buffer_len
     }
 }
 
-
-
-
-
 void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, const int delay_buffer_length,
     const float* buffer_data, const float* delay_buffer_data, int m_delay_time)
 {
@@ -293,10 +279,6 @@ void NewProjectAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, in
         buffer.copyFrom(channel, buffer_remaining, delay_buffer_data, buffer_length - buffer_remaining);
     }
 }
-
-
-
-
 
 void NewProjectAudioProcessor::feedbackDelay(int channel, const int buffer_length, const int delay_buffer_length,
     float* dry_buffer, float m_delay_feedback)
