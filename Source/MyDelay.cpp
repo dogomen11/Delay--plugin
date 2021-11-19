@@ -88,7 +88,7 @@ const float* MyDelay::getReadPointer(int channelNumber)
 void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float* buffer_data)
 {
     //TODO changed copy to add ----> maybe crash! or worse clip
-    AudioBuffer temp(delay_buffer);
+    AudioBuffer<float> temp(delay_buffer);
     const float* temp_data = temp.getReadPointer(channel);
     float debug_4 = delay_mix * 0.6;
     if (delay_buffer_length > buffer_length + write_position)
@@ -109,7 +109,7 @@ void MyDelay::fillDelayBuffer(int channel, const int buffer_length, const float*
 
 void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int buffer_length, float* dry_buffer, float vol_dials[], float m_pan_dials[])
 {
-    AudioBuffer temp(delay_buffer);
+    AudioBuffer<float> temp(delay_buffer);
     delay_reverb.setInputBuffer(temp);     //TODO: check if need to set input buffer after FX
     const int read_position = static_cast<int> (delay_buffer_length + write_position - (sample_rate * delay_time / 1000)) % delay_buffer_length;
     auto* channelData = temp.getWritePointer(channel);
