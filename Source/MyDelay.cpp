@@ -120,8 +120,9 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
         //delay_reverb.setupMyReverb();
         //temp = delay_reverb.addReverb(channel);
         debug_4.setEnabled(true);
-        dsp::AudioBlock<float> block(temp);
-        debug_4.process(dsp::ProcessContextReplacing<float>(block));
+        const dsp::AudioBlock<float> block_1(delay_buffer);
+        dsp::AudioBlock<float> block_2(temp);
+        debug_4.process(dsp::ProcessContextNonReplacing<float>(block_1, block_2));
     }
     else
     {
