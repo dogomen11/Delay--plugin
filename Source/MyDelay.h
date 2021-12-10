@@ -49,7 +49,7 @@ public:
     MyDelay();
     ~MyDelay();
 
-    dsp::Reverb debug_4;      //TODO delete after debug
+    MyReverb debug_4;      //TODO delete after debug
 
     void setDelayMix(float delay_mix_chosen);
     void setDelayTime(int delay_time_chosen);

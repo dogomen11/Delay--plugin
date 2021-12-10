@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 #include "MyDelay.h"
 #include "MyReverb.h"
-
+#include "Filter.h"
 
 #define NUM_OF_INSTENCES 16
 #define INPUT_GAIN_ID "input gain"
@@ -75,6 +75,7 @@ public:
     int m_delay_time = 400;
     float m_delay_feedback = 0.4f;
     float previous_gain;
+    
 
     // TODO : move param to stateValueTree
     //void process(dsp::ProcessContextReplacing<float> context);

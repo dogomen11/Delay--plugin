@@ -37,7 +37,7 @@ MyReverb::MyReverb() :	num_delay_lines(12),
 	toeplitz_vector.clear();
 	toeplitz_vector(1, 0) = 1.0f;
 	circulant_matrix = circulant_matrix.toeplitz(toeplitz_vector, 12);
-	for (int counter = 0; counter < 11; ++counter)
+	for (int counter = 0; counter < 11; ++counter) // initialize
 	{
 		circulant_matrix(counter, counter + (int)1) = 0.0;
 	}
@@ -51,7 +51,7 @@ MyReverb::MyReverb() :	num_delay_lines(12),
 	feedback_matrix = circulant_matrix - ((u_vector * (2.0 / num_delay_lines)) * u_vector_transposed);
 
 	for (int counter = 0; counter < 12; ++counter)
-		feedback_matrix_rows.add(new dsp::Matrix <float>(1, 12, feedback_matrix.getRawDataPointer() + counter * (int)12));
+		feedback_matrix_rows.add( new dsp::Matrix <float>(1, 12, feedback_matrix.getRawDataPointer() + counter * (int)12) );
 
 	input_buffer.clear();
 	output_buffer.clear();
@@ -105,7 +105,7 @@ void MyReverb::setInputBuffer(AudioBuffer <float>& new_buffer)
 
 void MyReverb::setupMyReverb()
 {
-	int new_num_samples = input_buffer_size + int(48000.0 * time_current_value) + int(std::ceil(48.0 * init_current_value)) + 11025;
+	int new_num_samples = input_buffer_size + int(480.00 * time_current_value) + int(std::ceil(48.0 * init_current_value));
 	output_buffer.setSize(input_buffer.getNumChannels(), new_num_samples, false, true, false);
 	input_buffer.setSize(input_buffer.getNumChannels(), output_buffer.getNumSamples(), true, true, false);
 

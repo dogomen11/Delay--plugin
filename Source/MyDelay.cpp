@@ -18,7 +18,8 @@ MyDelay::MyDelay() : write_position(0.0),
                     delay_mix(0.0),
                     delay_time(0.3),
                     input_gain(1.0),
-                    output_gain(1.0) 
+                    output_gain(1.0),
+                    debug_4()
 {
    delay_buffer.clear();
 }
@@ -117,16 +118,16 @@ void MyDelay::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const 
     if (reverb_instences[outputing_stage] == true)
     {
         //TODO: make the reverb work
-        //delay_reverb.setupMyReverb();
+        debug_4.addReverb(channel);
         //temp = delay_reverb.addReverb(channel);
-        debug_4.setEnabled(true);
-        const dsp::AudioBlock<float> block_1(delay_buffer);
-        dsp::AudioBlock<float> block_2(temp);
-        debug_4.process(dsp::ProcessContextNonReplacing<float>(block_1, block_2));
+        //const dsp::AudioBlock<float> block_1(delay_buffer);
+        //dsp::AudioBlock<float> block_2(temp);
+        //debug_4.setEnabled(true);
+        //debug_4.process(dsp::ProcessContextNonReplacing<float>(block_1, block_2));
     }
     else
     {
-        debug_4.setEnabled(false);
+        //debug_4.setEnabled(false);
     }
     addDelayinstenceToBuffer(buffer, temp, channel, buffer_length, read_position);
     //feedbackDelay(channel, buffer_length, dry_buffer);  //TODO: check if feedback before reverb and fX?? relevant??

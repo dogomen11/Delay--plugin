@@ -126,9 +126,8 @@ void NewProjectAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBl
     spec.sampleRate = last_sample_rate;
     spec.maximumBlockSize = samplesPerBlock;
     spec.numChannels = getTotalNumOutputChannels();
-    current_delay.debug_4.reset();
-    current_delay.debug_4.prepare(spec);
-
+    //current_delay.debug_4.reset();
+    //current_delay.debug_4.prepare(spec);
 
     //updateParameters();
     m_visualiser.clear();
@@ -191,6 +190,9 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     current_delay.updateArgs(m_write_position, m_sample_rate, m_on_off_button_array, m_reverb_button_array, m_delay_feedback, m_delay_time);
     const int buffer_length = buffer.getNumSamples();
     const int delay_buffer_length = m_delay_buffer.getNumSamples();
+    AudioSampleBuffer debug_5;
+    current_delay.debug_4.setInputBuffer(buffer);
+    current_delay.debug_4.setupMyReverb();
 
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
@@ -208,15 +210,20 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
         marked = current_delay.isMarked();
         if (marked == 0)
         {
-            fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_feedback);
-            getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
+            //fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_feedback);
+            //getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
             //feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_feedback);
+            RecursiveFilter my_filter(buffer);
+            buffer = my_filter.applyFilter(channel);
+
         }
         else
         {
-            current_delay.fillDelayBuffer(channel, buffer_length, buffer_data);
-            current_delay.getFromDelayBuffer(buffer, channel, buffer_length, dry_buffer, m_volume_dials, m_pan_dials);
-            current_delay.feedbackDelay(channel, buffer_length, dry_buffer);
+            //debug_5 = current_delay.debug_4.addReverb(channel);
+            //buffer = debug_5;
+            //current_delay.fillDelayBuffer(channel, buffer_length, buffer_data);
+            //current_delay.getFromDelayBuffer(buffer, channel, buffer_length, dry_buffer, m_volume_dials, m_pan_dials);
+            //current_delay.feedbackDelay(channel, buffer_length, dry_buffer);
         }
     }
     /*
