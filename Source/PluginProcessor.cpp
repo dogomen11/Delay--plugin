@@ -193,6 +193,8 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     AudioSampleBuffer debug_5;
     current_delay.debug_4.setInputBuffer(buffer);
     current_delay.debug_4.setupMyReverb();
+    MoogFilter my_filter(buffer, MOOG_FILTER);
+    my_filter.setSampleRate(getSampleRate());
 
 
     for (int channel = 0; channel < totalNumInputChannels; ++channel)
@@ -213,9 +215,7 @@ void NewProjectAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
             //fillDelayBuffer(channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_feedback);
             //getFromDelayBuffer(buffer, channel, buffer_length, delay_buffer_length, buffer_data, delay_buffer_data, m_delay_time);
             //feedbackDelay(channel, buffer_length, delay_buffer_length, dry_buffer, m_delay_feedback);
-            RecursiveFilter my_filter(buffer);
-            buffer = my_filter.applyFilter(channel);
-
+            my_filter.applyFilter(buffer, channel);
         }
         else
         {
