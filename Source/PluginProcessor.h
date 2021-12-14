@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 #include "MyDelay.h"
 #include "MyReverb.h"
-#include "Filter.h"
+#include "MyFilter.h"
 
 #define NUM_OF_INSTENCES 16
 #define INPUT_GAIN_ID "input gain"

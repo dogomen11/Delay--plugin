@@ -1,61 +1,67 @@
 /*
   ==============================================================================
 
-    Filter.cpp
+    MyFilter.cpp
     Created: 24 Aug 2021 12:47:44pm
     Author:  dogom
 
   ==============================================================================
 */
-#include "filter.h"
+#include "MyFilter.h"
 
-
-Filter::Filter(AudioBuffer<float>& buffer, filter_logic new_logic) : in_buffer(buffer), out_buffer(buffer)
+/*
+MyFilter::MyFilter(filter_logic new_logic) : filter_type(new_logic)
 {
-    f_buffer_size = buffer.getNumSamples();
-    out_buffer.setSize(buffer.getNumChannels(), buffer.getNumSamples());
     for (int i = 0; i < 10; i++)
     {
         coefficients[i] = 0;
     }
 }
 
-void Filter::setFilterType(filter_type new_type)
+void MyFilter::setFilterType(filter_type new_type)
 {
     switch (new_type)
     {
-        case (LOW_PASS):
-            setLowPass();
-            break;
-        case (HIGH_PASS):
-            setHighPass();
-            break;
-        case (BAND_PASS) :
-            setBandPass();
-            break;
+    case (LOW_PASS):
+        setLowPass();
+        break;
+    case (HIGH_PASS):
+        setHighPass();
+        break;
+    case (BAND_PASS):
+        setBandPass();
+        break;
     }
 }
 
-void Filter::setSampleRate(int new_sample_rate)
+void MyFilter::setSampleRate(int new_sample_rate)
 {
     f_sample_rate = new_sample_rate;
 }
 
-void Filter::setLowPass()
+void MyFilter::setLowPass()
 {
 
 }
 
-void Filter::setHighPass()
+void MyFilter::setHighPass()
 {
 
 }
 
-void Filter::setBandPass()
+void MyFilter::setBandPass()
 {
 
 }
 
+AudioBuffer<float> MyFilter::applyFilter(int channel)
+{
+    AudioBuffer<float> gggg;
+    return gggg;
+}
+
+
+/*
 AudioBuffer<float> TwoTermDifferenceFilter::applyFilter(int channel)
 {
     float current_difference, first, second;
@@ -127,8 +133,8 @@ AudioBuffer<float> RecursiveFilter::applyFilter(int channel)
     return out_buffer;
 }
 
-
-MoogFilter::MoogFilter(AudioBuffer<float>& buffer, filter_logic new_logic) : Filter(buffer, new_logic) 
+*/
+MoogFilter::MoogFilter()
 {
     y_a = 0;
     y_b = 0;
@@ -138,38 +144,48 @@ MoogFilter::MoogFilter(AudioBuffer<float>& buffer, filter_logic new_logic) : Fil
 
     frequency = 2000;
     resonance = 1;
-    drive = 1;
+    drive = 1.1;
+    f_sample_rate = 0;
 }
 
-void MoogFilter::applyFilter(AudioBuffer<float>& buffer, int channel)
+void MoogFilter::applyFilter(float* buffer)
 {
     float tmp;
-    for (int i = 0; i < 2 * f_buffer_size; i++)
+    for (int i = 0; i < 2 * f_sample_rate; i++)
     {
-        tmp = tanhf(buffer.getSample(channel, (i / 2) * drive));
-        buffer.setSample(channel, (i/2), tmp);
-        y_a = y_a + g * (tanhf(buffer.getSample(channel, (i/2)) - resonance * ((y_d_1 + y_d) / 2) - tanhf(y_a)));
+        tmp = tanhf(buffer[i / 2] * drive);
+        if (tmp > 0)
+        {
+            tmp = tmp;
+        }
+        y_a = y_a + g * (tanhf(tmp - resonance * ((y_d_1 + y_d) / 2) - tanhf(y_a)));
         y_b = y_b + g * (tanhf(y_a) - tanhf(y_b));
         y_c = y_c + g * (tanhf(y_b) - tanhf(y_c));
         y_d_1 = y_d;
         y_d = y_d + g * (tanhf(y_c) - tanhf(y_d));
-        buffer.setSample(channel, (i / 2), y_d);
+        buffer[i / 2] =  y_d;
     }
 }
 
-float MoogFilter::getFrequency() 
+
+float MoogFilter::getFrequency()
 {
     return frequency;
 }
 
-float MoogFilter::getResonance() 
+float MoogFilter::getResonance()
 {
     return resonance;
 }
 
-float MoogFilter::getDrive() 
+float MoogFilter::getDrive()
 {
     return drive;
+}
+
+void MoogFilter::setSampleRate(int new_sample_rate)
+{
+    f_sample_rate = new_sample_rate;
 }
 
 void MoogFilter::setFrequency(float new_freq)
